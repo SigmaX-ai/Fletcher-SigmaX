@@ -27,6 +27,7 @@
 #include <fletcher/api.h>
 #include <fletcher/common/timer.h>
 #include <fletcher/common/arrow-utils.h>
+#include <fletcher/common/hex-view.h>
 
 std::shared_ptr<arrow::Array> createPositsArray(size_t num_vecs, size_t vec_size) {
   // Posits array
@@ -117,6 +118,13 @@ int main(int argc, char **argv) {
 
   usercore->start();
   usercore->waitForFinish(100000);
+
+  size_t result_size = sizeof(uint32_t) * vec_size;
+  auto buf = (uint8_t*)malloc(result_size);
+  platform->copyDeviceToHost(0x4000, buf, result_size);
+  fletcher::HexView hv(0);
+  hv.addData(buf, result_size);
+  std::cout << hv.toString() << std::endl;
 
   return EXIT_SUCCESS;
 }

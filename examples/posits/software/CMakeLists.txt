@@ -16,7 +16,6 @@ find_library(LIB_FLETCHER fletcher)
 find_library(LIB_ARROW arrow)
 
 target_link_libraries(${PROJECT_NAME}
-        ${REQUIRED}
         ${LIB_ARROW}
         ${LIB_FLETCHER}
         )
