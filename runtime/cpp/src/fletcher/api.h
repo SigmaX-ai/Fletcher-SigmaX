@@ -14,7 +14,9 @@
 
 #pragma once
 
+#include "fletcher.h"
+
 #include "./context.h"
 #include "./platform.h"
-#include "./status.h"
+#include "./common/status.h"
 #include "./usercore.h"

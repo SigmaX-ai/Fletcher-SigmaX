@@ -17,6 +17,10 @@ set(SOURCES
         src/fletcher/context.cc
         src/fletcher/usercore.cc)
 
+# CPP runtime library uses global C header
+set(GLOBAL_C_HEADER
+        ../../common/c/src/fletcher/fletcher.h)
+
 set(HEADERS
         src/fletcher/platform.h
         src/fletcher/context.h
@@ -26,7 +30,7 @@ add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION 1)
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ../../common/cpp/src/fletcher.h)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER src/fletcher/api.h)
 
 # Include common functions, build it and link statically
 if (NOT TARGET fletcher-common)
@@ -34,6 +38,7 @@ if (NOT TARGET fletcher-common)
 endif()
 target_link_libraries(${PROJECT_NAME} fletcher-common)
 include_directories(../../common/cpp/src)
+include_directories(../../common/c/src)
 
 # Dynamically link the dynamically library linking library
 target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
@@ -49,21 +54,25 @@ install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
-# Install headers
+# Install headers from cpp runtime
 install(FILES ${HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         )
 
 # Headers from common library
 set(COMMON_HEADERS
-        ../../common/c/src/fletcher.h
-        ../../common/cpp/src/status.h
-        ../../common/cpp/src/arrow-utils.h
-        ../../common/cpp/src/hex-view.h
-        ../../common/cpp/src/timer.h)
+        ../../common/cpp/src/fletcher/common/status.h
+        ../../common/cpp/src/fletcher/common/arrow-utils.h
+        ../../common/cpp/src/fletcher/common/hex-view.h
+        ../../common/cpp/src/fletcher/common/timer.h)
 
 install(FILES ${COMMON_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/common
+        )
+
+# Install C header
+install(FILES ${GLOBAL_C_HEADER}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         )
 
 ########################################################################################################################
