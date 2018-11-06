@@ -57,7 +57,7 @@ std::shared_ptr<arrow::Array> createPositsArray(size_t num_vecs, size_t vec_size
 }
 
 int main(int argc, char **argv) {
-  fletcher::common::Timer t;
+  fletcher::Timer t;
 
   constexpr int num_rows = 100;
   constexpr int vec_size = 4;
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
   auto in_flpa = std::make_shared<arrow::Field>("posits_a", arrow::list(in_fp), false);
   auto in_flpb = std::make_shared<arrow::Field>("posits_b", arrow::list(in_fp), false);
   auto in_fields = std::vector<std::shared_ptr<arrow::Field>>({in_flpa, in_flpb});
-  auto in_schema = std::make_shared<arrow::Schema>(in_fields, fletcher::common::metaMode(fletcher::common::Mode::READ));
+  auto in_schema = std::make_shared<arrow::Schema>(in_fields, fletcher::metaMode(fletcher::Mode::READ));
 
   // Create input arrays and recordbatch
   auto in_pa = createPositsArray(num_rows, vec_size);
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   auto out_fpc = std::make_shared<arrow::Field>("posits_a", arrow::uint32(), false);
   auto out_fields = std::vector<std::shared_ptr<arrow::Field>>({out_fpc});
   auto out_schema = std::make_shared<arrow::Schema>(out_fields,
-                                                    fletcher::common::metaMode(fletcher::common::Mode::WRITE));
+                                                    fletcher::metaMode(fletcher::Mode::WRITE));
 
   // Create output array and recordbatch
   uint8_t *out_buf = nullptr;
