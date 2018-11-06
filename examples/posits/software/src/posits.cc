@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
   std::shared_ptr<fletcher::UserCore> usercore;
 
   // Create and initialize platform and context
-  fletcher::Platform::Make(&platform);
-  fletcher::Context::Make(&context, platform);
+  fletcher::Platform::Make(&platform).ewf("Could not create platform...");
+  fletcher::Context::Make(&context, platform).ewf("Could not create context...");
   usercore = std::make_shared<fletcher::UserCore>(context);
 
   platform->init();
