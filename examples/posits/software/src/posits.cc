@@ -24,10 +24,7 @@
 #include <arrow/api.h>
 
 // Fletcher
-#include <fletcher/api.h>
-#include <fletcher/common/timer.h>
-#include <fletcher/common/arrow-utils.h>
-#include <fletcher/common/hex-view.h>
+#include "fletcher/api.h"
 
 std::shared_ptr<arrow::Array> createPositsArray(size_t num_vecs, size_t vec_size) {
   // Posits array
