@@ -36,6 +36,8 @@ set_target_properties(${FLETCHER} PROPERTIES PUBLIC_HEADER src/fletcher/api.h)
 if (NOT TARGET fletcher-common)
     add_subdirectory(../../common/cpp fletcher-common)
 endif()
+# For now, we want to include all symbols from the common static library into the runtime shared library.
+# At some point they should be exposed more programatically (in the api header, for example).
 target_link_libraries(${FLETCHER} -Wl,-whole-archive fletcher-common -Wl,-no-whole-archive)
 include_directories(../../common/cpp/src)
 include_directories(../../common/c/src)
