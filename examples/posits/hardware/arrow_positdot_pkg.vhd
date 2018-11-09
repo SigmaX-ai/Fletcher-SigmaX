@@ -261,8 +261,7 @@ package arrow_positdot_pkg is
   component element_fifo
     port (
       srst        : in  std_logic;
-      wr_clk      : in  std_logic;
-      rd_clk      : in  std_logic;
+      clk         : in  std_logic;
       din         : in  std_logic_vector(255 downto 0);
       wr_en       : in  std_logic;
       rd_en       : in  std_logic;
@@ -316,8 +315,7 @@ package arrow_positdot_pkg is
   component output_fifo
     port (
       srst      : in  std_logic;
-      wr_clk    : in  std_logic;
-      rd_clk    : in  std_logic;
+      clk       : in  std_logic;
       din       : in  std_logic_vector(31 downto 0);
       wr_en     : in  std_logic;
       rd_en     : in  std_logic;

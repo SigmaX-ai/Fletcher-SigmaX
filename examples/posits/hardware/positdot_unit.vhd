@@ -1206,15 +1206,15 @@ begin
   --);
 
   -- Use this to keep everything in the same clock domain:
-  --re.clk_kernel <= clk;
+  re.clk_kernel <= clk;
   
-  posits_clock_inst : posits_clock
-   port map ( 
+  --posits_clock_inst : posits_clock
+   --port map ( 
   -- Clock out ports  
-   clk_out1 => re.clk_kernel,
+   --clk_out1 => re.clk_kernel,
    -- Clock in ports
-   clk_in1 => clk
- );
+   --clk_in1 => clk
+ --);
 
 ---------------------------------------------------------------------------------------------------
 --   ____            _                     _
