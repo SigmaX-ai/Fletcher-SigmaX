@@ -795,19 +795,19 @@ begin
 
         -- Elements
         -- First four argument registers are buffer addresses
-        -- MSBs are index buffer address
-        cr1_v.command_element.ctrl(127 downto 96) := r_element1_off_hi;
-        cr1_v.command_element.ctrl(95 downto 64)  := r_element1_off_lo;
+        -- LSBs are offsets buffer address
+        cr1_v.command_element.ctrl(63 downto 32) := r_element1_off_hi;
+        cr1_v.command_element.ctrl(31 downto 0)  := r_element1_off_lo;
+        
+        cr2_v.command_element.ctrl(63 downto 32) := r_element2_off_hi;
+        cr2_v.command_element.ctrl(31 downto 0)  := r_element2_off_lo;
 
-        cr2_v.command_element.ctrl(127 downto 96) := r_element2_off_hi;
-        cr2_v.command_element.ctrl(95 downto 64)  := r_element2_off_lo;
-
-        -- LSBs are data buffer address
-        cr1_v.command_element.ctrl(63 downto 32) := r_element1_posit_hi;
-        cr1_v.command_element.ctrl(31 downto 0)  := r_element1_posit_lo;
-
-        cr2_v.command_element.ctrl(63 downto 32) := r_element2_posit_hi;
-        cr2_v.command_element.ctrl(31 downto 0)  := r_element2_posit_lo;
+        -- MSBs are values buffer address
+        cr1_v.command_element.ctrl(127 downto 96) := r_element1_posit_hi;
+        cr1_v.command_element.ctrl(95 downto 64)  := r_element1_posit_lo;
+        
+        cr2_v.command_element.ctrl(127 downto 96) := r_element2_posit_hi;
+        cr2_v.command_element.ctrl(95 downto 64)  := r_element2_posit_lo;
 
         -- First and Last index for elements and reads
         cr1_v.command_element.firstIdx := slv(int(r.wed.batches) - 1, INDEX_WIDTH_ELEMENT);
@@ -1018,9 +1018,11 @@ begin
     -- Reset start is low by default.
     cw_v.cs.reset_start := '0';
 
+	-- Outfifo RD enable 0 by default
+	re.outfifo.c.rd_en <= '0';
+
     case cw_r.state is
       when IDLE =>
-        re.outfifo.c.rd_en <= '0';
         if control_start = '1' then
           cw_v.cs.reset_start := '1';
           cw_v.state          := WRITE_COMMAND;
@@ -1119,8 +1121,7 @@ begin
 
   element1_fifo : element_fifo port map (
     srst        => reset,
-    wr_clk      => clk,
-    rd_clk      => re.clk_kernel,
+    clk         => clk,
     din         => r.element1_data(255 downto 0),
     dout        => re.element1_fifo.dout,
     wr_en       => re.element1_fifo.c.wr_en,
@@ -1139,8 +1140,7 @@ begin
 
   element2_fifo : element_fifo port map (
     srst        => reset,
-    wr_clk      => clk,
-    rd_clk      => re.clk_kernel,
+    clk			=> clk,
     din         => r.element2_data(255 downto 0),
     dout        => re.element2_fifo.dout,
     wr_en       => re.element2_fifo.c.wr_en,
@@ -1160,8 +1160,8 @@ begin
   gen_accum_fifo_es2 : if POSIT_ES = 2 generate
     accum_fifo : accum_fifo_es2 port map (
       rst       => reset,
-      wr_clk    => re.clk_kernel,
-      rd_clk    => re.clk_kernel,
+      wr_clk    => clk,
+      rd_clk    => clk,
       din       => rs.accum_fifo_data,
       dout      => re.accum_fifo.dout,
       wr_en     => re.accum_fifo.c.wr_en,
@@ -1176,8 +1176,8 @@ begin
   gen_accum_fifo_es3 : if POSIT_ES = 3 generate
     accum_fifo : accum_fifo_es3 port map (
       rst       => reset,
-      wr_clk    => re.clk_kernel,
-      rd_clk    => re.clk_kernel,
+      wr_clk    => clk,
+      rd_clk    => clk,
       din       => rs.accum_fifo_data,
       dout      => re.accum_fifo.dout,
       wr_en     => re.accum_fifo.c.wr_en,
@@ -1232,8 +1232,7 @@ begin
   outfifo : output_fifo
     port map (
       srst      => reset,                   -- in
-      wr_clk    => re.clk_kernel,          -- in
-      rd_clk    => clk,                    -- in
+      clk       => clk,                    -- in
       din       => re.outfifo.din,         -- in
       wr_en     => re.outfifo.c.wr_en,     -- in
       rd_en     => re.outfifo.c.rd_en,     -- in
