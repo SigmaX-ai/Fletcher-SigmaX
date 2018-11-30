@@ -2,8 +2,8 @@
 import random
 import sys
 
-from fletcher.fields import *
-from fletcher.columnreader import *
+from testgen.fields import *
+from testgen.columnreader import *
 
 # Figure out a seed to use.
 if len(sys.argv) > 1:
