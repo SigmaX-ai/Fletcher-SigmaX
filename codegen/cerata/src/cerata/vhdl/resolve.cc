@@ -29,41 +29,41 @@
 
 namespace cerata::vhdl {
 
+static void InsertSignal(Component *comp, Edge *edge, std::deque<Node *> *resolved) {
+  CERATA_LOG(DEBUG, "VHDL:   Resolving " + edge->src()->ToString() + " --> " + edge->dst()->ToString());
+  std::string prefix;
+  if (edge->src()->parent()) {
+    prefix = edge->src()->parent().value()->name() + "_";
+  } else if (edge->dst()->parent()) {
+    prefix = edge->dst()->parent().value()->name() + "_";
+  }
+  // Remember we've touched these nodes already
+  resolved->push_back(edge->src());
+  resolved->push_back(edge->dst());
+  // Insert a new signal, after this, the original edge may potentially be destroyed.
+  auto sig = insert(edge, prefix, comp);
+}
+
 Component *Resolve::ResolvePortToPort(Component *comp) {
   std::deque<Node *> resolved;
-  CERATA_LOG(DEBUG, "VHDL: Resolve port-to-port connections...");
+  CERATA_LOG(DEBUG, "VHDL: Resolving port-to-port connections...");
   for (const auto &inst : comp->children()) {
     for (const auto &port : inst->GetAll<Port>()) {
+      // Iterate over all edges that are sinks of this port.
       for (const auto &edge : port->sinks()) {
         // If either side is not a port, continue with the next edge.
-        if (!edge->src()->IsPort() || !edge->dst()->IsPort()) {
-          continue;
-        }
+        if (!edge->src()->IsPort() || !edge->dst()->IsPort()) { continue; }
         // If either sides of the edges are a port node on this component, continue, since this is allowed in VHDL.
-        if ((edge->src()->parent() == comp) || (edge->dst()->parent() == comp)) {
-          continue;
-        }
+        if ((edge->src()->parent() == comp) || (edge->dst()->parent() == comp)) { continue; }
         // If the destination is already resolved, continue.
-        if (Contains(resolved, edge->dst())) {
-          continue;
-        }
+        if (Contains(resolved, edge->dst())) { continue; }
         // Dealing with two port nodes that are not on the component itself. VHDL cannot handle port-to-port connections
         // of instances. Insert a signal in between and add it to the component.
-        CERATA_LOG(DEBUG, "VHDL:   Resolving " + edge->src()->ToString() + " --> " + edge->dst()->ToString());
-        std::string prefix;
-        if (edge->src()->parent()) {
-          prefix = edge->src()->parent().value()->name() + "_";
-        } else if (edge->dst()->parent()) {
-          prefix = edge->dst()->parent().value()->name() + "_";
-        }
-        // Remember we've touched these nodes already
-        resolved.push_back(edge->src());
-        resolved.push_back(edge->dst());
-        // Insert a new signal, after this, the original edge may potentially be destroyed.
-        auto sig = insert(edge, prefix, comp);
+        InsertSignal(comp, edge, &resolved);
       }
     }
   }
+  CERATA_LOG(DEBUG, "VHDL: Resolved " + std::to_string(resolved.size()) + " port-to-port connections...");
   return comp;
 }
 

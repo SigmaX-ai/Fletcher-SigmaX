@@ -23,6 +23,7 @@
 
 namespace fletchgen {
 
+std::shared_ptr<cerata::Type> stream_probe();
 std::shared_ptr<cerata::Component> Profiler();
 
 }  // namespace fletchgen

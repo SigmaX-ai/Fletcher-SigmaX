@@ -33,7 +33,7 @@ Type::Type(std::string name, Type::ID id)
     : Named(std::move(name)), id_(id) {}
 
 bool Type::IsAbstract() const {
-  return Is(STRING) || Is(BOOLEAN) || Is(RECORD) || Is(STREAM);
+  return Is(STRING) || Is(BOOLEAN) || Is(RECORD) || Is(STREAM) || Is(NUL);
 }
 
 bool Type::IsPhysical() const {
@@ -448,7 +448,9 @@ std::shared_ptr<TypeMapper> Stream::GenerateMapper(Type *other) {
     if ((this->element_type() == nul()) || (dynamic_cast<Stream *>(other)->element_type() == nul())) {
       auto mapper = TypeMapper::Make(this, other);
       // Only connect the two stream flat types.
-      mapper->map_matrix()(0, 0) = 1;
+      auto matrix = mapper->map_matrix();
+      matrix(0, 0) = 1;
+      mapper->SetMappingMatrix(matrix);
       return mapper;
     }
   }

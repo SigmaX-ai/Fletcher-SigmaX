@@ -31,6 +31,11 @@ using cerata::integer;
 using cerata::bit;
 using cerata::nul;
 
+std::shared_ptr<cerata::Type> stream_probe() {
+  static auto result = Stream::Make("", nul());
+  return result;
+}
+
 std::shared_ptr<Component> Profiler() {
   // Parameters
   auto out_count_max = Parameter::Make("OUT_COUNT_MAX", integer(), cerata::intl(1023));
@@ -38,8 +43,10 @@ std::shared_ptr<Component> Profiler() {
 
   // Component & ports
   static auto ret = Component::Make("StreamProfiler", {
+      out_count_max,
+      out_count_width,
       Port::Make(bus_cr()),
-      Port::Make("probe", Stream::Make("", nul()), Port::Dir::IN),
+      Port::Make("probe", stream_probe(), Port::Dir::IN),
       Port::Make("enable", bit(), Port::Dir::IN),
       Port::Make("count", Vector::Make("out_count_type", out_count_width), Port::Dir::OUT)});
 
