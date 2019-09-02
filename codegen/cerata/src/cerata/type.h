@@ -60,6 +60,7 @@ class Type : public Named, public std::enable_shared_from_this<Type> {
     BIT,      ///< Physical, primitive
     VECTOR,   ///< t.b.d.
 
+    NUL,      ///< Abstract, primitive
     INTEGER,  ///< Abstract, primitive
     NATURAL,  ///< Abstract, primitive
     STRING,   ///< Abstract, primitive
@@ -106,12 +107,16 @@ class Type : public Named, public std::enable_shared_from_this<Type> {
   std::deque<std::shared_ptr<TypeMapper>> mappers() const;
   /// @brief Add a type mapper.
   void AddMapper(const std::shared_ptr<TypeMapper> &mapper, bool remove_existing = true);
-  /// @brief Get a mapper to another type, if it exists.
-  std::optional<std::shared_ptr<TypeMapper>> GetMapper(Type *other);
+  /// @brief Get a mapper to another type, if it exists. Generates one, if possible, when generate_implicit = true.
+  std::optional<std::shared_ptr<TypeMapper>> GetMapper(Type *other, bool generate_implicit = true);
   /// @brief Remove all mappers to a specific type
   int RemoveMappersTo(Type *other);
   /// @brief Get a mapper to another type, if it exists.
   std::optional<std::shared_ptr<TypeMapper>> GetMapper(const std::shared_ptr<Type> &other);
+  /// @brief Check if a mapper can be generated to another specific type.
+  virtual bool CanGenerateMapper(const Type &other) const { return false; }
+  /// @brief Generate a new mapper to a specific other type. Should be checked with CanGenerateMapper first, or throws.
+  virtual std::shared_ptr<TypeMapper> GenerateMapper(Type* other) { return nullptr; }
 
   /// @brief Obtain any Nodes that parametrize this type.
   virtual std::deque<Node *> GetParameters() const { return {}; }
@@ -181,6 +186,13 @@ struct Bit : public Type {
 std::shared_ptr<Type> bit();
 
 // Abstract Primitive types:
+
+/// @brief Void type. Useful for e.g. empty streams.
+struct Nul : public Type {
+  explicit Nul(std::string name) : Type(std::move(name), Type::NUL) {}
+};
+/// @brief Return a static Nul type.
+std::shared_ptr<Type> nul();
 
 /// @brief Integer type.
 struct Integer : public Type {
@@ -370,6 +382,11 @@ class Stream : public Type {
 
   /// @brief Determine if this Stream is exactly equal to another Stream.
   bool IsEqual(const Type &other) const override;
+
+  /// @brief Check if a mapper can be generated to another specific type.
+  bool CanGenerateMapper(const Type &other) const override;
+  /// @brief Generate a new mapper to a specific other type. Should be checked with CanGenerateMapper first, or throws.
+  std::shared_ptr<TypeMapper> GenerateMapper(Type* other) override;
 
  private:
   /// @brief The type of the elements traveling over this stream.

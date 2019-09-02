@@ -29,7 +29,7 @@ namespace cerata::vhdl {
 MultiBlock Design::Generate() {
   MultiBlock ret;
 
-  // TODO(johanpel): when proper copy is in place, make a copy of the whole structure before sanitizing,
+  // TODO(johanpel): when proper copy is in place, make a deep copy of the whole structure before sanitizing,
   // in case multiple back ends are processing the graph. This currently modifies the original structure.
 
   // Resolve VHDL specific problems

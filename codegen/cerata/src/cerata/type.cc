@@ -101,7 +101,7 @@ std::deque<std::shared_ptr<TypeMapper>> Type::mappers() const {
 void Type::AddMapper(const std::shared_ptr<TypeMapper> &mapper, bool remove_existing) {
   Type *other = mapper->b();
   // Check if a mapper doesn't already exists
-  if (GetMapper(other)) {
+  if (GetMapper(other, false)) {
     if (!remove_existing) {
       throw std::runtime_error(
           "Mapper already exists to convert from " + this->ToString(true, true) + " to " + other->ToString(true, true));
@@ -128,27 +128,39 @@ std::optional<std::shared_ptr<TypeMapper>> Type::GetMapper(const std::shared_ptr
   return GetMapper(other.get());
 }
 
-std::optional<std::shared_ptr<TypeMapper>> Type::GetMapper(Type *other) {
-  // Search for an explicit type mapper.
+std::optional<std::shared_ptr<TypeMapper>> Type::GetMapper(Type *other, bool generate_implicit) {
+  // Search for an existing type mapper.
   for (const auto &m : mappers_) {
     if (m->CanConvert(this, other)) {
       return m;
     }
   }
-  // Implicit type mappers maybe be generated in two cases:
 
-  // If it's exactly the same type object,
-  // TODO(johanpel): clarify previous comment
-  if (other == this) {
-    // Generate a type mapper to itself using the TypeMapper constructor.
-    return TypeMapper::Make(this);
+  if (generate_implicit) {
+    // Implicit type mappers maybe be generated in three cases:
+
+    // If it's exactly the same type object,
+    // TODO(johanpel): clarify previous comment
+    if (other == this) {
+      // Generate a type mapper to itself using the TypeMapper constructor.
+      return TypeMapper::Make(this);
+    }
+
+    // If there is an explicit function in this Type to generate a mapper:
+    if (CanGenerateMapper(*other)) {
+      // Generate, add and return the new mapper.
+      auto new_mapper = GenerateMapper(other);
+      this->AddMapper(new_mapper);
+      return new_mapper;
+    }
+
+    // Or if its an "equal" type, where each flattened type is equal.
+    if (IsEqual(*other)) {
+      // Generate an implicit type mapping.
+      return TypeMapper::MakeImplicit(this, other);
+    }
   }
 
-  // Or if its an "equal" type, where each flattened type is equal.
-  if (IsEqual(*other)) {
-    // Generate an implicit type mapping.
-    return TypeMapper::MakeImplicit(this, other);
-  }
   // There is no mapper
   return {};
 }
@@ -259,6 +271,11 @@ Stream::Stream(const std::string &type_name, std::shared_ptr<Type> element_type,
 
 std::shared_ptr<Type> bit() {
   static std::shared_ptr<Type> result = std::make_shared<Bit>("bit");
+  return result;
+}
+
+std::shared_ptr<Type> nul() {
+  static std::shared_ptr<Type> result = std::make_shared<Nul>("nul");
   return result;
 }
 
@@ -400,6 +417,42 @@ void Stream::SetElementType(std::shared_ptr<Type> type) {
   mappers_ = {};
   // Set the new element type
   element_type_ = std::move(type);
+}
+
+bool Stream::CanGenerateMapper(const Type &other) const {
+  switch (other.id()) {
+    case Type::STREAM:
+      // If this and the other streams are "equal", a mapper can be generated
+      if (IsEqual(other)) {
+        return true;
+      } else {
+        // We can also map an empty stream, without mapping the elements. In practise, a back-end might emit e.g.
+        // additional ready/valid/count wires, connect those, but not any data elements.
+        if ((this->element_type() == nul()) || (dynamic_cast<const Stream &>(other).element_type() == nul())) {
+          return true;
+        }
+      }
+    default:return false;
+  }
+}
+
+std::shared_ptr<TypeMapper> Stream::GenerateMapper(Type *other) {
+  // Check if we can even do this:
+  if (!CanGenerateMapper(*other)) {
+    throw std::runtime_error("No mapper generator known from Stream to " + other->name() + ToString(other->id()));
+  }
+  if (IsEqual(*other)) {
+    return TypeMapper::MakeImplicit(this, other);
+  } else {
+    // If this or the other stream has a no element type:
+    if ((this->element_type() == nul()) || (dynamic_cast<Stream *>(other)->element_type() == nul())) {
+      auto mapper = TypeMapper::Make(this, other);
+      // Only connect the two stream flat types.
+      mapper->map_matrix()(0, 0) = 1;
+      return mapper;
+    }
+  }
+  return nullptr;
 }
 
 bool Record::IsEqual(const Type &other) const {
