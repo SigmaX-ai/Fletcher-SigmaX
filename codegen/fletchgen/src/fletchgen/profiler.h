@@ -16,6 +16,8 @@
 
 #include <cerata/api.h>
 
+#include "fletchgen/basic_types.h"
+
 #include <utility>
 #include <string>
 #include <deque>
@@ -24,6 +26,10 @@
 namespace fletchgen {
 
 std::shared_ptr<cerata::Type> stream_probe();
-std::shared_ptr<cerata::Component> Profiler();
+std::shared_ptr<cerata::Component> Profiler(const std::shared_ptr<cerata::ClockDomain> &domain = kernel_domain());
+
+constexpr char PROFILE_KEY[] = "fletchgen_profile";
+
+void AttachStreamProfilers(cerata::Component *comp, cerata::Port *cr, const std::shared_ptr<cerata::ClockDomain>& cd);
 
 }  // namespace fletchgen

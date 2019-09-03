@@ -140,7 +140,6 @@ std::optional<std::shared_ptr<TypeMapper>> Type::GetMapper(Type *other, bool gen
     // Implicit type mappers maybe be generated in three cases:
 
     // If it's exactly the same type object,
-    // TODO(johanpel): clarify previous comment
     if (other == this) {
       // Generate a type mapper to itself using the TypeMapper constructor.
       return TypeMapper::Make(this);

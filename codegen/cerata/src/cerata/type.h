@@ -394,6 +394,8 @@ class Stream : public Type {
   /// @brief The name of the elements traveling over this stream.
   std::string element_name_;
 
+  /// TODO(johanpel): let streams have a clock domain so we can instantiate CDC automatically.
+
   /// @brief Elements Per Cycle
   int epc_ = 1;
 };

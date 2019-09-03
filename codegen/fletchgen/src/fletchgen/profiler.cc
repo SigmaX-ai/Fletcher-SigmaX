@@ -36,19 +36,22 @@ std::shared_ptr<cerata::Type> stream_probe() {
   return result;
 }
 
-std::shared_ptr<Component> Profiler() {
+std::shared_ptr<Component> Profiler(const std::shared_ptr<ClockDomain> &domain) {
   // Parameters
   auto out_count_max = Parameter::Make("OUT_COUNT_MAX", integer(), cerata::intl(1023));
   auto out_count_width = Parameter::Make("OUT_COUNT_WIDTH", integer(), cerata::intl(10));
 
+  std::shared_ptr<Type> pcd = cerata::Record::Make("pcd", {
+      cerata::RecField::Make("clk", std::make_shared<cerata::Clock>("pcd_clk", domain)),
+      cerata::RecField::Make("reset", std::make_shared<cerata::Reset>("pcd_reset", domain))});
+
+  auto pcr = Port::Make(pcd);
+  auto probe = Port::Make("probe", stream_probe(), Port::Dir::IN);
+  auto enable = Port::Make("enable", bit(), Port::Dir::IN);
+  auto count = Port::Make("count", Vector::Make("out_count_type", out_count_width), Port::Dir::OUT);
+
   // Component & ports
-  static auto ret = Component::Make("StreamProfiler", {
-      out_count_max,
-      out_count_width,
-      Port::Make(bus_cr()),
-      Port::Make("probe", stream_probe(), Port::Dir::IN),
-      Port::Make("enable", bit(), Port::Dir::IN),
-      Port::Make("count", Vector::Make("out_count_type", out_count_width), Port::Dir::OUT)});
+  auto ret = Component::Make("StreamProfiler", {out_count_max, out_count_width, pcr, probe, enable, count});
 
   // VHDL metadata
   ret->SetMeta(cerata::vhdl::metakeys::PRIMITIVE, "true");
@@ -58,5 +61,45 @@ std::shared_ptr<Component> Profiler() {
   return ret;
 }
 
+cerata::Component *EnableStreamProfiling(cerata::Component *top) {
+  std::deque<cerata::Graph *> graphs;
+  cerata::GetAllGraphs(top, &graphs, true);
+  for (auto g : graphs) {
+    if (g->IsComponent()) {
+      AttachStreamProfilers(g, )
+    }
+  }
+}
+
+void AttachStreamProfilers(cerata::Component *comp, cerata::Port *cr, const std::shared_ptr<cerata::ClockDomain> &cd) {
+  // Get all nodes and check if they are of a stream type, then check if they should be profiled.
+  for (auto n : comp->GetNodes()) {
+    if (n->type()->Is(cerata::Type::STREAM)) {
+      if (n->meta.at(PROFILE_KEY) == "true") {
+        // Instantiate a profiler
+        auto profiler_inst = comp->AddInstanceOf(Profiler(cd).get());
+
+        // Obtain the profiler ports
+        auto p_probe = profiler_inst->port("probe");
+        auto p_count = profiler_inst->port("count");
+        auto p_en = profiler_inst->port("enable");
+
+        // Copy profiler data and control to the top level port.
+        auto c_count = std::dynamic_pointer_cast<Node>(p_count->Copy());
+        auto c_en = std::dynamic_pointer_cast<Node>(p_en->Copy());
+        c_count->SetName(n->name() + "_count");
+        c_en->SetName(n->name() + "_enable");
+        comp->AddObject(c_count);
+        comp->AddObject(c_en);
+
+        // Connect the probe, clock/reset, count and enable
+        Connect(p_probe, n);
+        Connect(profiler_inst->port("pcd"), cr);
+        c_count <<= p_count;
+        p_en <<= c_en;
+      }
+    }
+  }
+}
 
 }  // namespace fletchgen

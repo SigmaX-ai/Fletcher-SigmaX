@@ -25,6 +25,7 @@
 #include "cerata/output.h"
 #include "cerata/pool.h"
 #include "cerata/expression.h"
+#include "cerata/transform.h"
 
 // Cerata utilities
 #include "cerata/utils.h"
