@@ -1,4 +1,4 @@
-// Copyright 2018 Delft University of Technology
+// Copyright 2018-2019 Delft University of Technology
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -166,78 +166,15 @@ struct NormalNode : public MultiOutputNode {
 };
 
 /**
- * @brief A Literal Node
- *
- * A literal node can be used to store some literal value. A literal node can, for example, be used for Vector Type
- * widths or it can be connected to a Parameter Node, to give the Parameter its value.
+ * @brief Class to mark nodes with information for synchronous designs, e.g. clock domain.
  */
-class Literal : public MultiOutputNode {
+class Synchronous {
  public:
-  /// The storage type of the literal value.
-  enum class StorageType { INT, STRING, BOOL };
+  explicit Synchronous(std::shared_ptr<ClockDomain> domain) : domain_(std::move(domain)) {}
+  std::shared_ptr<ClockDomain> domain() { return domain_; }
+  void SetDomain(std::shared_ptr<ClockDomain> domain) { domain_ = std::move(domain); }
  protected:
-  /// @brief Literal constructor.
-  Literal(std::string name,
-          const std::shared_ptr<Type> &type,
-          StorageType st,
-          std::string str_val,
-          int int_val,
-          bool bool_val)
-      : MultiOutputNode(std::move(name), Node::NodeID::LITERAL, type),
-        storage_type_(st),
-        String_val_(std::move(str_val)),
-        Bool_val_(bool_val),
-        Int_val_(int_val) {}
-
-  /// The raw storage type of the literal node.
-  StorageType storage_type_;
-
-  // Macros to generate Literal functions for different storage types.
-#ifndef LITERAL_DECL_FACTORY
-#define LITERAL_DECL_FACTORY(NAME, TYPENAME)                                                                        \
- public:                                                                                                            \
-  explicit Literal(std::string name, const std::shared_ptr<Type> &type, TYPENAME value);                            \
-  static std::shared_ptr<Literal> Make##NAME(TYPENAME value);                                                       \
-  static std::shared_ptr<Literal> Make##NAME(const std::shared_ptr<Type> &type, TYPENAME value);                    \
-  static std::shared_ptr<Literal> Make##NAME(std::string name, const std::shared_ptr<Type> &type, TYPENAME value);  \
-  TYPENAME NAME##Value() const { return NAME##_val_; }                                                              \
-                                                                                                                    \
- protected:                                                                                                         \
-  TYPENAME NAME##_val_{};
-#endif
-
- LITERAL_DECL_FACTORY(String, std::string) //NOLINT
- LITERAL_DECL_FACTORY(Bool, bool) //NOLINT
- LITERAL_DECL_FACTORY(Int, int) //NOLINT
-
- public:
-  /// @brief Make a literal node with raw storage type T.
-  template<typename T>
-  static std::shared_ptr<Literal> Make(T value) { throw std::runtime_error("Not implemented."); }
-
-  /// @brief Create a copy of this Literal.
-  std::shared_ptr<Object> Copy() const override;
-  /// @brief Add an input to this node.
-  std::shared_ptr<Edge> AddSource(Node *source) override;
-
-  /// @brief A literal node has no inputs. This function returns an empty list.
-  inline std::deque<Edge *> sources() const override { return {}; }
-  /// @brief Get the output edges of this Node.
-  inline std::deque<Edge *> sinks() const override { return ToRawPointers(outputs_); }
-
-  /// @brief Convert the Literal value to a human-readable string.
-  std::string ToString() const override;
-
-  /// @brief Return the raw C++ representation of the literal value.
-  template<typename T>
-  T raw_value() { throw std::runtime_error("Not implemented."); }
-
-  /// @brief Return whether the raw C++ representation is of type T.
-  template<typename T>
-  bool IsRaw() { throw std::runtime_error("Not implemented."); }
-
-  /// @brief Return the storage type of the literal.
-  StorageType storage_type() const { return storage_type_; }
+  std::shared_ptr<ClockDomain> domain_;
 };
 
 /**
@@ -245,14 +182,17 @@ class Literal : public MultiOutputNode {
  *
  * A Signal Node can have a single input and multiple outputs.
  */
-class Signal : public NormalNode {
+class Signal : public NormalNode, public Synchronous {
  public:
   /// @brief Signal constructor.
-  Signal(std::string name, std::shared_ptr<Type> type);
+  Signal(std::string name, std::shared_ptr<Type> type, std::shared_ptr<ClockDomain> domain = default_domain());
   /// @brief Create a new Signal and return a smart pointer to it.
-  static std::shared_ptr<Signal> Make(std::string name, const std::shared_ptr<Type> &type);
+  static std::shared_ptr<Signal> Make(std::string name,
+                                      const std::shared_ptr<Type> &type,
+                                      std::shared_ptr<ClockDomain> domain = default_domain());
   /// @brief Create a new Signal and return a smart pointer to it. The Signal name is derived from the Type name.
-  static std::shared_ptr<Signal> Make(const std::shared_ptr<Type> &type);
+  static std::shared_ptr<Signal> Make(const std::shared_ptr<Type> &type,
+                                      std::shared_ptr<ClockDomain> domain = default_domain());
   /// @brief Create a copy of this Signal.
   std::shared_ptr<Object> Copy() const override;
 };
@@ -282,52 +222,6 @@ class Parameter : public NormalNode {
 
   /// @brief An optional default value.
   std::optional<std::shared_ptr<Literal>> default_value_;
-};
-
-/**
- * @brief A terminator structure to enable terminator sanity checks.
- */
-class Term {
- public:
-  /// Terminator direction.
-  enum Dir { IN, OUT };
-
-  /// @brief Return the inverse of a direction.
-  static Dir Invert(Dir dir);
-
-  /// @brief Return the direction of this terminator.
-  inline Dir dir() const { return dir_; }
-
-  /// @brief Construct a new Term.
-  explicit Term(Dir dir) : dir_(dir) {}
-
-  /// @brief Return true if this Term is an input, false otherwise.
-  inline bool IsInput() { return dir_ == IN; }
-  /// @brief Return true if this Term is an output, false otherwise.
-  inline bool IsOutput() { return dir_ == OUT; }
-
-  /// @brief Convert a Dir to a human-readable string.
-  static std::string str(Dir dir);
-
- protected:
-  /// The direction of this terminator.
-  Dir dir_;
-};
-
-/**
- * @brief A port is a terminator node on a graph
- */
-struct Port : public NormalNode, public Term {
-  /// @brief Construct a new port.
-  Port(std::string name, std::shared_ptr<Type> type, Term::Dir dir);
-  /// @brief Make a new port with some name, type and direction.
-  static std::shared_ptr<Port> Make(std::string name, std::shared_ptr<Type> type, Term::Dir dir = Term::IN);
-  /// @brief Make a new port. The name will be derived from the name of the type.
-  static std::shared_ptr<Port> Make(std::shared_ptr<Type> type, Term::Dir dir = Term::IN);
-  /// @brief Deep-copy the port.
-  std::shared_ptr<Object> Copy() const override;
-  /// @brief Invert the direction of this port.
-  Port &InvertDirection();
 };
 
 /// @brief Convert a Node ID to a human-readable string.
