@@ -154,4 +154,16 @@ std::shared_ptr<Type> ConvertFixedWidthType(const std::shared_ptr<arrow::DataTyp
   }
 }
 
+std::optional<cerata::Port *> GetClockResetPort(cerata::Graph *graph, const ClockDomain &domain) {
+  for (auto crn : graph->GetNodes()) {
+    if (crn->type()->IsEqual(*cr()) && crn->IsPort()) {
+      // TODO(johanpel): better comparison
+      if (crn->AsPort().domain().get() == &domain) {
+        return &crn->AsPort();
+      }
+    }
+  }
+  return std::nullopt;
+}
+
 }  // namespace fletchgen

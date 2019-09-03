@@ -20,6 +20,7 @@
 #include "fletcher/common.h"
 #include "fletchgen/design.h"
 #include "fletchgen/recordbatch.h"
+#include "fletchgen/profiler.h"
 
 namespace fletchgen {
 
@@ -79,6 +80,8 @@ fletchgen::Design fletchgen::Design::GenerateFrom(const std::shared_ptr<Options>
   for (const auto &recordbatch_component : ret.mantle->recordbatch_components()) {
     ret.recordbatches.push_back(recordbatch_component);
   }
+
+  //EnableStreamProfiling(ret.mantle.get());
 
   return ret;
 }

@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <locale>
+#include <cerata/port.h>
 
 namespace fletchgen {
 
@@ -102,5 +103,13 @@ std::shared_ptr<Type> cr();
  * @return              The corresponding Type
  */
 std::shared_ptr<Type> ConvertFixedWidthType(const std::shared_ptr<arrow::DataType> &arrow_type);
+
+/**
+ * @brief Return the clock/reset port of a graph for a specific clock domain, if it exists.
+ * @param graph   The graph to find the port for.
+ * @param domain  The domain to find the port for.
+ * @return        Optionally, the port node that holds the clock/reset record.
+ */
+std::optional<cerata::Port *> GetClockResetPort(cerata::Graph *graph, const ClockDomain &domain);
 
 }  // namespace fletchgen

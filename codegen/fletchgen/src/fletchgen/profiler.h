@@ -25,11 +25,26 @@
 
 namespace fletchgen {
 
-std::shared_ptr<cerata::Type> stream_probe();
-std::shared_ptr<cerata::Component> Profiler(const std::shared_ptr<cerata::ClockDomain> &domain = kernel_domain());
-
+/// @brief Key for the kv-metadata annotation of stream nodes.
 constexpr char PROFILE_KEY[] = "fletchgen_profile";
 
-void AttachStreamProfilers(cerata::Component *comp, cerata::Port *cr, const std::shared_ptr<cerata::ClockDomain>& cd);
+/// @brief Returns a stream probe type.
+std::shared_ptr<cerata::Type> stream_probe();
+
+/// @brief Returns the profiler component.
+std::shared_ptr<cerata::Component> Profiler(const std::shared_ptr<cerata::ClockDomain> &domain = kernel_domain());
+
+/**
+ * @brief Transforms a Cerata component graph to include stream profilers for selected nodes.
+ *
+ * To select a node for profiling, the node must be of type cerata::Stream and it must have the PROFILE_KEY set to true
+ * in its kv-metadata.
+ *
+ * Currently doesn't make a deep copy, so it modifies the existing structure irreversibly.
+ *
+ * @param top The top-level component to apply this to.
+ * @return    A transformed graph.
+ */
+cerata::Component *EnableStreamProfiling(cerata::Component *top);
 
 }  // namespace fletchgen
