@@ -29,7 +29,7 @@ TEST(Profiler, Connect) {
 
   auto stream_type = cerata::Stream::Make("test_stream", cerata::Vector::Make(8), "data");
   auto stream_port = cerata::Port::Make(stream_type);
-  stream_port->meta[PROFILE_KEY] = "true";
+  stream_port->meta[PROFILE] = "true";
   auto crp = cerata::Port::Make("bcd", cr());
   auto top = cerata::Component::Make("top", {crp, stream_port});
 

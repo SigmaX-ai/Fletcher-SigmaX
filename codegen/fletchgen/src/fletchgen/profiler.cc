@@ -32,16 +32,16 @@ using cerata::bit;
 using cerata::nul;
 
 std::shared_ptr<cerata::Type> stream_probe() {
-  static auto result = Stream::Make("", nul());
+  auto result = Stream::Make("", nul());
   return result;
 }
 
-std::shared_ptr<Component> Profiler(const std::shared_ptr<ClockDomain> &domain) {
+static std::shared_ptr<Component> Profiler() {
   // Parameters
   auto out_count_max = Parameter::Make("OUT_COUNT_MAX", integer(), cerata::intl(1023));
   auto out_count_width = Parameter::Make("OUT_COUNT_WIDTH", integer(), cerata::intl(10));
 
-  auto pcr = Port::Make("pcd", cr(), Port::Dir::IN, domain);
+  auto pcr = Port::Make("pcd", cr(), Port::Dir::IN);
   auto probe = Port::Make("probe", stream_probe(), Port::Dir::IN);
   auto enable = Port::Make("enable", bit(), Port::Dir::IN);
   auto count = Port::Make("count", Vector::Make("out_count_type", out_count_width), Port::Dir::OUT);
@@ -57,47 +57,94 @@ std::shared_ptr<Component> Profiler(const std::shared_ptr<ClockDomain> &domain) 
   return ret;
 }
 
+std::unique_ptr<cerata::Instance> ProfilerInstance(const std::string& name, const std::shared_ptr<ClockDomain> &domain) {
+  std::unique_ptr<cerata::Instance> result;
+  // Check if the Profiler component was already created.
+  Component *profiler_component;
+  auto optional_component = cerata::default_component_pool()->Get("StreamProfiler");
+  if (optional_component) {
+    profiler_component = *optional_component;
+  } else {
+    profiler_component = Profiler().get();
+  }
+  // Create and return an instance of the Array component.
+  result = cerata::Instance::Make(profiler_component, name);
+  result->port("pcd")->SetDomain(domain);
+  // Because we can have multiple probes mapping to multiple stream types, each probe type should be unique.
+  auto probe = result->port("probe");
+  probe->SetType(stream_probe());
+  probe->SetDomain(domain);
+  return result;
+}
+
 static void AttachStreamProfilers(cerata::Component *comp) {
-  // Get all nodes and check if they are of a stream type, then check if they should be profiled.
+  // Get all nodes and check if their type contains a stream, then check if they should be profiled.
   for (auto n : comp->GetNodes()) {
-    if (n->type()->Is(cerata::Type::STREAM)) {
-      if (n->meta.at(PROFILE_KEY) == "true") {
-        // Figure out the clock domain of the stream node
-        std::shared_ptr<ClockDomain> domain;
-        if (n->IsPort()) {
-          domain = n->AsPort().domain();
-        } else if (n->IsSignal()) {
-          domain = n->AsSignal().domain();
-        } else {
-          domain = cerata::default_domain();
+    // Flatten the types
+    auto fts = Flatten(n->type());
+    int s = 0;
+    for (size_t f = 0; f < fts.size(); f++) {
+      if (fts[f].type_->Is(Type::STREAM)) {
+        if (n->meta.count(PROFILE) > 0) {
+          if (n->meta.at(PROFILE) == "true") {
+            FLETCHER_LOG(INFO, "Inserting profiler for stream node " + n->name()
+                + ", sub-stream " + std::to_string(s)
+                + " of flattened type " + n->type()->name()
+                + " index " + std::to_string(f) + ".");
+            // Figure out the clock domain of the stream node
+            std::shared_ptr<ClockDomain> domain;
+            if (n->IsPort()) {
+              domain = n->AsPort().domain();
+            } else if (n->IsSignal()) {
+              domain = n->AsSignal().domain();
+            } else {
+              domain = cerata::default_domain();
+            }
+            auto cr_node = GetClockResetPort(comp, *domain);
+
+            if (!cr_node) {
+              throw std::runtime_error("No clock/reset port present on component [" + comp->name()
+                                           + "] for clock domain [" + domain->name()
+                                           + "] of stream node [" + n->name() + "].");
+            }
+
+            // Instantiate a profiler
+            std::string name = fts[f].name(cerata::NamePart(n->name(), true));
+
+            auto profiler_inst_unique = ProfilerInstance(name + "_StreamProfiler_inst", domain);
+            auto profiler_inst = profiler_inst_unique.get();
+            comp->AddChild(std::move(profiler_inst_unique));
+
+            // Obtain the profiler ports
+            auto p_probe = profiler_inst->port("probe");
+            auto p_count = profiler_inst->port("count");
+            auto p_en = profiler_inst->port("enable");
+
+            // Copy profiler data and control to the top level port.
+            auto c_count = std::dynamic_pointer_cast<Node>(p_count->Copy());
+            auto c_en = std::dynamic_pointer_cast<Node>(p_en->Copy());
+            c_count->SetName(name +"_count");
+            c_en->SetName(name + "_enable");
+            comp->AddObject(c_count);
+            comp->AddObject(c_en);
+
+            // Set up a type mapper.
+            auto mapper = TypeMapper::Make(n->type(), p_probe->type());
+            auto matrix = mapper->map_matrix().Empty();
+            matrix(f, 0) = 1;
+            mapper->SetMappingMatrix(matrix);
+            n->type()->AddMapper(mapper);
+
+            // Connect the probe, clock/reset, count and enable
+            Connect(p_probe, n);
+            Connect(profiler_inst->port("pcd"), *cr_node);
+            c_count <<= p_count;
+            p_en <<= c_en;
+
+            // Increase the s-th stream index in the flattened type.
+            s++;
+          }
         }
-        auto cr_node = GetClockResetPort(comp, *domain);
-
-        if (!cr_node) {
-          throw std::runtime_error("No clock/reset port present on component for clock domain.");
-        }
-
-        // Instantiate a profiler
-        auto profiler_inst = comp->AddInstanceOf(Profiler(domain).get());
-
-        // Obtain the profiler ports
-        auto p_probe = profiler_inst->port("probe");
-        auto p_count = profiler_inst->port("count");
-        auto p_en = profiler_inst->port("enable");
-
-        // Copy profiler data and control to the top level port.
-        auto c_count = std::dynamic_pointer_cast<Node>(p_count->Copy());
-        auto c_en = std::dynamic_pointer_cast<Node>(p_en->Copy());
-        c_count->SetName(n->name() + "_count");
-        c_en->SetName(n->name() + "_enable");
-        comp->AddObject(c_count);
-        comp->AddObject(c_en);
-
-        // Connect the probe, clock/reset, count and enable
-        Connect(p_probe, n);
-        Connect(profiler_inst->port("pcd"), *cr_node);
-        c_count <<= p_count;
-        p_en <<= c_en;
       }
     }
   }

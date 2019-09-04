@@ -87,7 +87,7 @@ struct BusPort : public Port {
   BusPort(Port::Dir dir,
           BusSpec spec,
           const std::string &name = "",
-          std::shared_ptr<ClockDomain> domain = cerata::default_domain())
+          std::shared_ptr<ClockDomain> domain = bus_cd())
       : Port(name.empty() ? "bus" : name, bus(spec), dir, std::move(domain)), spec_(spec) {}
   /// @brief Make a new port and return a shared pointer to it.
   static std::shared_ptr<BusPort> Make(std::string name, Port::Dir dir, BusSpec spec);

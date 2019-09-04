@@ -81,7 +81,7 @@ fletchgen::Design fletchgen::Design::GenerateFrom(const std::shared_ptr<Options>
     ret.recordbatches.push_back(recordbatch_component);
   }
 
-  //EnableStreamProfiling(ret.mantle.get());
+  EnableStreamProfiling(ret.mantle.get());
 
   return ret;
 }

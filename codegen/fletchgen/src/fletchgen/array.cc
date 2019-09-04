@@ -130,11 +130,11 @@ static std::shared_ptr<Component> Array(Mode mode) {
 
   if (mode == Mode::READ) {
     spec.function = BusFunction::READ;
-    data = Port::Make(DataName(mode), read_data(), Port::Dir::OUT);
+    data = Port::Make(DataName(mode), read_data(), Port::Dir::OUT, kernel_cd());
     bus = BusPort::Make(Port::Dir::OUT, spec);
   } else {
     spec.function = BusFunction::WRITE;
-    data = Port::Make(DataName(mode), write_data(), Port::Dir::IN);
+    data = Port::Make(DataName(mode), write_data(), Port::Dir::IN, kernel_cd());
     bus = BusPort::Make(Port::Dir::OUT, spec);
   }
 
@@ -160,11 +160,11 @@ static std::shared_ptr<Component> Array(Mode mode) {
 
   // Insert ports
   objects.insert(objects.end(), {
-      Port::Make("bcd", cr(), Port::Dir::IN, bus_domain()),
-      Port::Make("kcd", cr(), Port::Dir::IN, kernel_domain()),
+      Port::Make("bcd", cr(), Port::Dir::IN, bus_cd()),
+      Port::Make("kcd", cr(), Port::Dir::IN, kernel_cd()),
       bus,
-      Port::Make("cmd", cmd(), Port::Dir::IN),
-      Port::Make("unl", unlock(), Port::Dir::OUT),
+      Port::Make("cmd", cmd(), Port::Dir::IN, kernel_cd()),
+      Port::Make("unl", unlock(), Port::Dir::OUT, kernel_cd()),
       data});
 
   auto ret = Component::Make(ArrayName(mode), objects);

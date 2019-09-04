@@ -19,8 +19,6 @@
 #include <fletcher/common.h>
 #include <string>
 #include <memory>
-#include <locale>
-#include <cerata/port.h>
 
 namespace fletchgen {
 
@@ -78,9 +76,9 @@ PARAM_DECL_FACTORY(bus_burst_max_len)
 PARAM_DECL_FACTORY(index_width)
 
 /// @brief Fletcher accelerator clock domain
-std::shared_ptr<ClockDomain> kernel_domain();
+std::shared_ptr<ClockDomain> kernel_cd();
 /// @brief Fletcher bus clock domain
-std::shared_ptr<ClockDomain> bus_domain();
+std::shared_ptr<ClockDomain> bus_cd();
 /// @brief Fletcher data
 std::shared_ptr<Type> data(const std::shared_ptr<Node> &width);
 /// @brief Fletcher length

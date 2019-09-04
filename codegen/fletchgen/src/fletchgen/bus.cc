@@ -102,7 +102,7 @@ static std::shared_ptr<Component> BusArbiter(BusSpec spec) {
       Parameter::Make("MST_REQ_SLICE", boolean(), booll(true)),
       Parameter::Make("MST_DAT_SLICE", boolean(), booll(true)),
       Parameter::Make("SLV_DAT_SLICES", boolean(), booll(true)),
-      Port::Make("bcd", cr(), Port::Dir::IN, bus_domain()),
+      Port::Make("bcd", cr(), Port::Dir::IN, bus_cd()),
       mst,
       slaves_array,
   });
@@ -139,7 +139,7 @@ std::shared_ptr<Component> BusReadSerializer() {
       Parameter::Make("SLV_DAT_SLICE_DEPTH", integer(), intl(2)),
       Parameter::Make("MST_REQ_SLICE_DEPTH", integer(), intl(2)),
       Parameter::Make("MST_DAT_SLICE_DEPTH", integer(), intl(2)),
-      Port::Make("bcd", cr(), Port::Dir::IN, bus_domain()),
+      Port::Make("bcd", cr(), Port::Dir::IN, bus_cd()),
       Port::Make("mst", bus_read(aw, mlw, mdw), Port::Dir::OUT),
       Port::Make("slv", bus_read(aw, slw, sdw), Port::Dir::OUT),
   });

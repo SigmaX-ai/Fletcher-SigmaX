@@ -30,7 +30,7 @@ Kernel::Kernel(std::string name, const std::deque<RecordBatch *> &recordbatches)
   AddObject(bus_addr_width());
 
   // Add clock/reset
-  AddObject(Port::Make("kcd", cr(), Port::Dir::IN, kernel_domain()));
+  AddObject(Port::Make("kcd", cr(), Port::Dir::IN, kernel_cd()));
 
   // Add MMIO
   AddObject(MmioPort::Make(Port::Dir::IN));

@@ -85,12 +85,12 @@ PARAM_FACTORY(bus_burst_max_len, 16)
 PARAM_FACTORY(index_width, 32)
 
 // Create basic clock domains
-std::shared_ptr<ClockDomain> kernel_domain() {
+std::shared_ptr<ClockDomain> kernel_cd() {
   static std::shared_ptr<ClockDomain> result = std::make_shared<ClockDomain>("kcd");
   return result;
 }
 
-std::shared_ptr<ClockDomain> bus_domain() {
+std::shared_ptr<ClockDomain> bus_cd() {
   static std::shared_ptr<ClockDomain> result = std::make_shared<ClockDomain>("bcd");
   return result;
 }

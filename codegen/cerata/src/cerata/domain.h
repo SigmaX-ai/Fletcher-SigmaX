@@ -30,7 +30,7 @@ struct ClockDomain : public Named {
   /// @brief Clock domain constructor
   explicit ClockDomain(std::string name);
   /// @brief Create a new clock domain and return a shared pointer to it.
-  static std::shared_ptr<ClockDomain> Make(const std::string& name) { return std::make_shared<ClockDomain>(name); }
+  static std::shared_ptr<ClockDomain> Make(const std::string &name) { return std::make_shared<ClockDomain>(name); }
   // TODO(johanpel): add other properties
 };
 

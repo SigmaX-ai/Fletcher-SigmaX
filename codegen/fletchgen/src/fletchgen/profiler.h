@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include <cerata/api.h>
-
 #include "fletchgen/basic_types.h"
 
+#include <cerata/api.h>
 #include <utility>
 #include <string>
 #include <deque>
@@ -26,13 +25,14 @@
 namespace fletchgen {
 
 /// @brief Key for the kv-metadata annotation of stream nodes.
-constexpr char PROFILE_KEY[] = "fletchgen_profile";
+constexpr char PROFILE[] = "fletchgen_profile";
 
 /// @brief Returns a stream probe type.
 std::shared_ptr<cerata::Type> stream_probe();
 
-/// @brief Returns the profiler component.
-std::shared_ptr<cerata::Component> Profiler(const std::shared_ptr<cerata::ClockDomain> &domain = kernel_domain());
+/// @brief Returns an instance of a StreamProfiler.
+std::unique_ptr<cerata::Instance> ProfilerInstance(const std::string& name,
+                                                   const std::shared_ptr<cerata::ClockDomain> &domain = kernel_cd());
 
 /**
  * @brief Transforms a Cerata component graph to include stream profilers for selected nodes.

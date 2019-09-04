@@ -35,8 +35,8 @@ RecordBatch::RecordBatch(const std::shared_ptr<FletcherSchema> &fletcher_schema)
   // Get Arrow Schema
   auto as = fletcher_schema_->arrow_schema();
   // Add default port nodes
-  AddObject(Port::Make("bcd", cr(), Port::Dir::IN, bus_domain()));
-  AddObject(Port::Make("kcd", cr(), Port::Dir::IN, kernel_domain()));
+  AddObject(Port::Make("bcd", cr(), Port::Dir::IN, bus_cd()));
+  AddObject(Port::Make("kcd", cr(), Port::Dir::IN, kernel_cd()));
   AddObject(bus_addr_width());
   // Add and connect all array readers and resulting ports
   AddArrays(*fletcher_schema);
@@ -53,16 +53,20 @@ void RecordBatch::AddArrays(const FletcherSchema &fletcher_schema) {
                                                  << " for schema: " << fletcher_schema.name()
                                                  << " : " << field->name());
       // Convert to and add an Arrow port. We must invert it because it is an output of the RecordBatch.
-      auto kernel_arrow_port = FieldPort::MakeArrowPort(fletcher_schema, field, fletcher_schema.mode(), true);
+      auto kernel_arrow_port = FieldPort::MakeArrowPort(fletcher_schema,
+                                                        field,
+                                                        fletcher_schema.mode(),
+                                                        true,
+                                                        kernel_cd());
       auto kernel_arrow_type = kernel_arrow_port->type();
       AddObject(kernel_arrow_port);
 
       // Add a command port for the ArrayReader/Writer
-      auto command_port = FieldPort::MakeCommandPort(fletcher_schema, field);
+      auto command_port = FieldPort::MakeCommandPort(fletcher_schema, field, kernel_cd());
       AddObject(command_port);
 
       // Add an unlock port for the ArrayReader/Writer
-      auto unlock_port = FieldPort::MakeUnlockPort(fletcher_schema, field);
+      auto unlock_port = FieldPort::MakeUnlockPort(fletcher_schema, field, kernel_cd());
       AddObject(unlock_port);
 
       // Instantiate an ArrayReader or Writer

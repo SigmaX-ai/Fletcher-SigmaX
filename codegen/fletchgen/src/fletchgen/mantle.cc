@@ -28,6 +28,7 @@
 #include "fletchgen/schema.h"
 #include "fletchgen/bus.h"
 #include "fletchgen/mmio.h"
+#include "fletchgen/profiler.h"
 
 namespace fletchgen {
 
@@ -39,8 +40,8 @@ Mantle::Mantle(std::string name, std::shared_ptr<SchemaSet> schema_set)
     : Component(std::move(name)), schema_set_(std::move(schema_set)) {
 
   // Add default ports
-  auto bcr = Port::Make("bcd", cr(), Port::Dir::IN, bus_domain());
-  auto kcr = Port::Make("kcd", cr(), Port::Dir::IN, kernel_domain());
+  auto bcr = Port::Make("bcd", cr(), Port::Dir::IN, bus_cd());
+  auto kcr = Port::Make("kcd", cr(), Port::Dir::IN, kernel_cd());
   auto regs = MmioPort::Make(Port::Dir::IN);
   AddObject(bcr);
   AddObject(kcr);
@@ -70,11 +71,17 @@ Mantle::Mantle(std::string name, std::shared_ptr<SchemaSet> schema_set)
     for (const auto &fp : field_ports) {
       if (fp->function_ == FieldPort::Function::ARROW) {
         // If the port is an output, it's an input for the kernel and vice versa.
+        // Connect the ports and remember the edge.
+        std::shared_ptr<cerata::Edge> e;
         if (fp->dir() == cerata::Term::Dir::OUT) {
-          Connect(kernel_inst_->port(fp->name()), fp);
+          e = Connect(kernel_inst_->port(fp->name()), fp);
         } else {
-          Connect(fp, kernel_inst_->port(fp->name()));
+          e = Connect(fp, kernel_inst_->port(fp->name()));
         }
+        // if profiling enabled...insert a signal between the edge.
+        auto s = cerata::insert(e.get(), "p_", this);
+        s->meta[PROFILE] = "true";
+
       } else if (fp->function_ == FieldPort::Function::COMMAND) {
         Connect(fp, kernel_inst_->port(fp->name()));
       } else if (fp->function_ == FieldPort::Function::UNLOCK) {

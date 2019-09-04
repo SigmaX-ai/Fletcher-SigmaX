@@ -17,6 +17,7 @@
 #include <memory>
 #include <deque>
 #include <string>
+#include <optional>
 
 #include "cerata/graph.h"
 #include "cerata/node.h"
@@ -38,6 +39,31 @@ std::shared_ptr<Edge> Edge::Make(const std::string &name,
   return std::shared_ptr<Edge>(e);
 }
 
+static void CheckDomains(Node *src, Node *dst) {
+  if ((src->IsPort() || src->IsSignal()) && (dst->IsPort() || dst->IsSignal())) {
+    auto src_dom = dynamic_cast<Synchronous *>(src)->domain();
+    auto dst_dom = dynamic_cast<Synchronous *>(dst)->domain();
+    if (src_dom != dst_dom) {
+      std::stringstream warning;
+      warning << "Attempting to connect Synchronous nodes, but clock domains differ.\n";
+
+      warning << "Src: [" + src->ToString() + "] in domain: [" + dst_dom->name() + "]";
+      if (src->parent()) {
+        warning << " on parent: [" + src->parent().value()->name() + "]";
+      }
+
+      warning << "\nDst: [" + dst->ToString() + "] in domain: [" + src_dom->name() + "]";
+      if (dst->parent()) {
+        warning << " on parent: [" + dst->parent().value()->name() + "]";
+      }
+
+      warning << "\nAutomated CDC crossings are not yet implemented or instantiated.";
+      warning << "This behavior may cause incorrect designs.";
+      CERATA_LOG(WARNING, warning.str());
+    }
+  }
+}
+
 std::shared_ptr<Edge> Connect(Node *dst, Node *src) {
   // Check for potential errors
   if (src == nullptr) {
@@ -50,17 +76,7 @@ std::shared_ptr<Edge> Connect(Node *dst, Node *src) {
 
   // Check if the clock domains correspond. Currently, this doesn't result in an error as automated CDC support is not
   // in place yet. Just generate a warning for now:
-  if ((src->IsPort() || src->IsSignal()) && (dst->IsPort() || dst->IsSignal())) {
-    auto src_dom = dynamic_cast<Synchronous *>(src)->domain();
-    auto dst_dom = dynamic_cast<Synchronous *>(dst)->domain();
-    if (src_dom != dst_dom) {
-      CERATA_LOG(WARNING, std::string("Attempting to connect Synchronous nodes, but clock domains differ.")
-          + " Dst: [" + dst->ToString() + "] in domain: [" + src_dom->name()
-          + "] Src: [" + src->ToString() + "] in domain: [" + dst_dom->name()
-          + "] Automated CDC crossings are not yet implemented or instantiated."
-            " This behavior may cause incorrect designs.");
-    }
-  }
+  CheckDomains(src, dst);
 
   // Check if the types can be mapped onto each other
   if (!src->type()->GetMapper(dst->type())) {
@@ -171,15 +187,25 @@ std::shared_ptr<Signal> insert(Edge *edge, const std::string &name_prefix, std::
   auto src = edge->src();
   auto dst = edge->dst();
 
+  // Make sure we're inserting between signal/port nodes.
+  if (!(src->IsPort() || src->IsSignal()) && (dst->IsPort() || dst->IsSignal())) {
+    throw std::runtime_error("Attempting to insert signal node on edge between non-port/signal node.");
+  }
+
+  // When they were connected, their clock domains must have matched. Just grab the domain from the source.
+  std::shared_ptr<ClockDomain> domain;
+  if (src->IsPort()) domain = src->AsPort().domain();
+  if (src->IsSignal()) domain = src->AsSignal().domain();
+
   // Get the destination type
   auto type = src->type();
   auto name = name_prefix + src->name();
   // Create the signal and take shared ownership of the type
-  auto signal = Signal::Make(name, type->shared_from_this());
+  auto signal = Signal::Make(name, type->shared_from_this(), domain);
 
   // Share ownership of the new signal with the potential new_owner
   if (new_owner) {
-    new_owner.value()->AddObject(signal);
+    (*new_owner)->AddObject(signal);
   }
 
   // Remove the original edge from the source and destination node
