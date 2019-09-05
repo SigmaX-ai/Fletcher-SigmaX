@@ -76,7 +76,7 @@ arrow::Status FieldAnalyzer::VisitField(const arrow::Field &field) {
 }
 
 arrow::Status FieldAnalyzer::VisitType(const arrow::DataType &type) {
-  buf_name_.push_back(type.ToString());
+  // buf_name_.push_back(type.ToString());
   // buf_name_ += ":" + type.ToString();
   return type.Accept(this);
 }
