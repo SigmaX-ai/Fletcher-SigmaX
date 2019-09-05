@@ -51,7 +51,7 @@ void GenerateReadSREC(const std::vector<fletcher::RecordBatchDescription> &meta_
         // Print some debug info
         auto hv = fletcher::HexView(offset);
         hv.AddData(buf.raw_buffer_, buf.size_);
-        FLETCHER_LOG(DEBUG, buf.desc_ + "\n" + hv.ToString());
+        FLETCHER_LOG(DEBUG, fletcher::ToString(buf.desc_) + "\n" + hv.ToString());
 
         // Calculate the padded length and calculate the next offset.
         auto padded_size = PaddedLength(buf.size_, buffer_align);

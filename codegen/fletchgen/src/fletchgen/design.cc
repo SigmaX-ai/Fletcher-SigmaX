@@ -21,6 +21,7 @@
 #include "fletchgen/design.h"
 #include "fletchgen/recordbatch.h"
 #include "fletchgen/profiler.h"
+#include "fletchgen/mmio.h"
 
 namespace fletchgen {
 
@@ -80,6 +81,8 @@ fletchgen::Design fletchgen::Design::GenerateFrom(const std::shared_ptr<Options>
   for (const auto &recordbatch_component : ret.mantle->recordbatch_components()) {
     ret.recordbatches.push_back(recordbatch_component);
   }
+
+  GenerateVhdmmioYaml(ret.batch_desc);
 
   EnableStreamProfiling(ret.mantle.get());
 

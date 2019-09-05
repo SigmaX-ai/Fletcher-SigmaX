@@ -17,6 +17,8 @@
 #include <utility>
 
 #include "cerata/domain.h"
+#include "cerata/node.h"
+#include "cerata/port.h"
 
 namespace cerata {
 
@@ -25,6 +27,15 @@ ClockDomain::ClockDomain(std::string name) : Named(std::move(name)) {}
 std::shared_ptr<ClockDomain> default_domain() {
   static std::shared_ptr<ClockDomain> result = std::make_shared<ClockDomain>("default");
   return result;
+}
+
+std::optional<std::shared_ptr<ClockDomain>> GetDomain(const Node &node) {
+  if (node.IsPort()) {
+    return node.AsPort().domain();
+  } else if (node.IsSignal()) {
+    return node.AsSignal().domain();
+  }
+  return std::nullopt;
 }
 
 }  // namespace cerata

@@ -28,7 +28,9 @@ namespace fletcher {
 
 class FieldAnalyzer : public arrow::TypeVisitor {
  public:
-  FieldAnalyzer(FieldMetadata *field, std::vector<BufferMetadata> *buffers, std::string prefix = "")
+  FieldAnalyzer(FieldMetadata *field,
+                std::vector<BufferMetadata> *buffers,
+                std::vector<std::string> prefix = {})
       : field_out_(field), buffers_out_(buffers), buf_name_(std::move(prefix)) {}
   bool Analyze(const arrow::Field &field);
 
@@ -39,7 +41,9 @@ class FieldAnalyzer : public arrow::TypeVisitor {
   arrow::Status VisitFixedWidth(const T &type) {
     // Suppress unused warning
     (void) type;
-    buffers_out_->emplace_back(nullptr, 0, buf_name_ + " (values)", level);
+    auto desc = buf_name_;
+    desc.emplace_back("values");
+    buffers_out_->emplace_back(nullptr, 0, desc, level);
     return arrow::Status::OK();
   }
 
@@ -72,16 +76,16 @@ class FieldAnalyzer : public arrow::TypeVisitor {
 #undef VISIT_FIXED_WIDTH
 
   // TODO(johanpel): Not implemented yet:
-  //arrow::Status Visit(const arrow::BooleanType &type) override {}
-  //arrow::Status Visit(const arrow::NullType &type) override {}
-  //arrow::Status Visit(const UnionType& type) override {}
-  //arrow::Status Visit(const DictionaryType& type) override {}
-  //arrow::Status Visit(const ExtensionType& type) override {}
+  // arrow::Status Visit(const arrow::BooleanType &type) override {}
+  // arrow::Status Visit(const arrow::NullType &type) override {}
+  // arrow::Status Visit(const UnionType& type) override {}
+  // arrow::Status Visit(const DictionaryType& type) override {}
+  // arrow::Status Visit(const ExtensionType& type) override {}
 
   int level = 0;
   FieldMetadata *field_out_;
   std::vector<BufferMetadata> *buffers_out_;
-  std::string buf_name_;
+  std::vector<std::string> buf_name_;
 };
 
 /**

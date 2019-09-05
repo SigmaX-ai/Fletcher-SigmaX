@@ -21,6 +21,8 @@
 
 namespace cerata {
 
+class Node;
+
 /**
  * @brief A clock domain
  *
@@ -34,7 +36,10 @@ struct ClockDomain : public Named {
   // TODO(johanpel): add other properties
 };
 
-/// @brief Return a default clock domain to be used in the whole design.
+/// @brief Return a static default clock domain to be used in the whole design.
 std::shared_ptr<ClockDomain> default_domain();
+
+/// @brief Return the clock domain of a node, if it has one.
+std::optional<std::shared_ptr<ClockDomain>> GetDomain(const Node& node);
 
 }  // namespace cerata

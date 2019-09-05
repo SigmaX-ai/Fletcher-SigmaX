@@ -14,10 +14,12 @@
 
 #pragma once
 
+#include <fletcher/arrow-utils.h>
 #include <cerata/api.h>
 #include <string>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace fletchgen {
 
@@ -69,5 +71,7 @@ struct MmioPort : public Port {
                                         MmioSpec spec = MmioSpec(),
                                         const std::shared_ptr<ClockDomain>& domain = cerata::default_domain());
 };
+
+void GenerateVhdmmioYaml(const std::vector<fletcher::RecordBatchDescription>& batches);
 
 }  // namespace fletchgen

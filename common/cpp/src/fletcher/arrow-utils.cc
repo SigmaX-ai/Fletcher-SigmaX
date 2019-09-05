@@ -71,7 +71,7 @@ bool MustIgnore(const arrow::Field &field) {
   return ret;
 }
 
-int GetIntMeta(const arrow::Field &field, const std::string& key, int default_to) {
+int GetIntMeta(const arrow::Field &field, const std::string &key, int default_to) {
   int ret = default_to;
   auto strepc = GetMeta(field, key);
   if (!strepc.empty()) {
@@ -181,6 +181,17 @@ void ReadRecordBatchesFromFile(const std::string &file_name, std::vector<std::sh
     }
     out->push_back(recordbatch);
   }
+}
+
+std::string ToString(const std::vector<std::string> &strvec, const std::string &sep) {
+  std::string result;
+  for (const auto &s : strvec) {
+    result += s;
+    if (s != strvec.back()) {
+      result += sep;
+    }
+  }
+  return result;
 }
 
 void AppendExpectedBuffersFromField(std::vector<std::string> *buffers, const arrow::Field &field) {

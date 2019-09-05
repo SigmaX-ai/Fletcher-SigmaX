@@ -171,7 +171,7 @@ struct NormalNode : public MultiOutputNode {
 class Synchronous {
  public:
   explicit Synchronous(std::shared_ptr<ClockDomain> domain) : domain_(std::move(domain)) {}
-  std::shared_ptr<ClockDomain> domain() { return domain_; }
+  std::shared_ptr<ClockDomain> domain() const { return domain_; }
   void SetDomain(std::shared_ptr<ClockDomain> domain) { domain_ = std::move(domain); }
  protected:
   std::shared_ptr<ClockDomain> domain_;

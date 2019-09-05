@@ -57,7 +57,8 @@ static std::shared_ptr<Component> Profiler() {
   return ret;
 }
 
-std::unique_ptr<cerata::Instance> ProfilerInstance(const std::string& name, const std::shared_ptr<ClockDomain> &domain) {
+std::unique_ptr<cerata::Instance> ProfilerInstance(const std::string &name,
+                                                   const std::shared_ptr<ClockDomain> &domain) {
   std::unique_ptr<cerata::Instance> result;
   // Check if the Profiler component was already created.
   Component *profiler_component;
@@ -91,27 +92,23 @@ static void AttachStreamProfilers(cerata::Component *comp) {
                 + ", sub-stream " + std::to_string(s)
                 + " of flattened type " + n->type()->name()
                 + " index " + std::to_string(f) + ".");
-            // Figure out the clock domain of the stream node
-            std::shared_ptr<ClockDomain> domain;
-            if (n->IsPort()) {
-              domain = n->AsPort().domain();
-            } else if (n->IsSignal()) {
-              domain = n->AsSignal().domain();
-            } else {
-              domain = cerata::default_domain();
+            auto domain = GetDomain(*n);
+            if (!domain) {
+              throw std::runtime_error("No clock domain specified for stream node ["
+                                           + n->name() + "] on component ["
+                                           + comp->name() + ".");
             }
-            auto cr_node = GetClockResetPort(comp, *domain);
-
+            auto cr_node = GetClockResetPort(comp, **domain);
             if (!cr_node) {
               throw std::runtime_error("No clock/reset port present on component [" + comp->name()
-                                           + "] for clock domain [" + domain->name()
+                                           + "] for clock domain [" + (*domain)->name()
                                            + "] of stream node [" + n->name() + "].");
             }
 
             // Instantiate a profiler
             std::string name = fts[f].name(cerata::NamePart(n->name(), true));
 
-            auto profiler_inst_unique = ProfilerInstance(name + "_StreamProfiler_inst", domain);
+            auto profiler_inst_unique = ProfilerInstance(name + "_StreamProfiler_inst", *domain);
             auto profiler_inst = profiler_inst_unique.get();
             comp->AddChild(std::move(profiler_inst_unique));
 
@@ -123,7 +120,7 @@ static void AttachStreamProfilers(cerata::Component *comp) {
             // Copy profiler data and control to the top level port.
             auto c_count = std::dynamic_pointer_cast<Node>(p_count->Copy());
             auto c_en = std::dynamic_pointer_cast<Node>(p_en->Copy());
-            c_count->SetName(name +"_count");
+            c_count->SetName(name + "_count");
             c_en->SetName(name + "_enable");
             comp->AddObject(c_count);
             comp->AddObject(c_en);

@@ -14,10 +14,13 @@
 
 #include "fletchgen/mmio.h"
 
-#include <cerata/api.h>
+#include <fletcher/fletcher.h>
 #include <fletcher/logging.h>
+#include <fletcher/common.h>
+#include <cerata/api.h>
 #include <memory>
 #include <string>
+#include <fstream>
 
 namespace fletchgen {
 
@@ -83,6 +86,95 @@ std::string MmioSpec::ToMMIOTypeName() const {
 
 std::shared_ptr<MmioPort> MmioPort::Make(Port::Dir dir, MmioSpec spec, const std::shared_ptr<ClockDomain> &domain) {
   return std::make_shared<MmioPort>(dir, spec, "mmio", domain);
+}
+
+void GenerateVhdmmioYaml(const std::vector<fletcher::RecordBatchDescription> &batches) {
+  auto ofs = std::ofstream("fletchgen.mmio.yaml");
+  ofs << "metadata:\n"
+         "  name: Fletchgen\n"
+         "  doc: happy bunnies\n"
+         "  \n"
+         "entity:\n"
+         "  bus-flatten:  yes\n"
+         "  bus-prefix:   mmio_\n"
+         "  clock-name:   bcd_clk\n"
+         "  reset-name:   bcd_reset\n"
+         "\n"
+         "features:\n"
+         "  bus-width:    32\n"
+         "  optimize:     yes\n"
+         "\n"
+         "interface:\n"
+         "  flatten:      yes\n"
+         "\n"
+         "fields: \n"
+         "  - address: 0\n"
+         "    register-name: control\n"
+         "    bitrange: 0\n"
+         "    name: start\n"
+         "    behavior: strobe\n"
+         "\n"
+         "  - address: 0\n"
+         "    register-name: control\n"
+         "    bitrange: 1\n"
+         "    name: stop\n"
+         "    behavior: strobe\n"
+         "\n"
+         "  - address: 0\n"
+         "    register-name: control\n"
+         "    bitrange: 2\n"
+         "    name: reset\n"
+         "    behavior: strobe\n"
+         "\n"
+         "  - address: 4\n"
+         "    register-name: status\n"
+         "    bitrange: 0\n"
+         "    name: idle\n"
+         "    behavior: status\n"
+         "\n"
+         "  - address: 4\n"
+         "    register-name: status\n"
+         "    bitrange: 1\n"
+         "    name: busy\n"
+         "    behavior: status\n"
+         "\n"
+         "  - address: 4\n"
+         "    register-name: status\n"
+         "    bitrange: 2\n"
+         "    name: done\n"
+         "    behavior: status\n"
+         "\n"
+         "  - address: 8\n"
+         "    bitrange: 63..0\n"
+         "    name: result\n"
+         "    behavior: status\n"
+         "\n";
+
+  int addr = 4 * FLETCHER_REG_SCHEMA;
+  for (size_t r = 0; r < batches.size(); r++) {
+    addr += 4;
+    ofs << "  - address: " << addr << "\n";
+    ofs << "    name: " << batches[r].name << "_firstidx" << "\n";
+    ofs << "    behavior: control\n";
+    addr += 4;
+    ofs << "  - address: " << addr << "\n";
+    ofs << "    name: " << batches[r].name << "_lastidx" << "\n";
+    ofs << "    behavior: control\n";
+    ofs << "\n";
+  }
+
+  for (const auto &r : batches) {
+    for (const auto &b : r.buffers) {
+      addr += 4;
+      ofs << "  - address: " << addr << "\n";
+      ofs << "    name: " << r.name + "_" + fletcher::ToString(b.desc_) << "_lo" << "\n";
+      ofs << "    behavior: control\n";
+      addr += 4;
+      ofs << "  - address: " << addr << "\n";
+      ofs << "    name: " << r.name + "_" + fletcher::ToString(b.desc_) << "_hi" << "\n";
+      ofs << "    behavior: control\n";
+    }
+  }
 }
 
 }  // namespace fletchgen

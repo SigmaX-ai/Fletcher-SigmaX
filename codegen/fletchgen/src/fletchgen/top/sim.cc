@@ -104,7 +104,7 @@ std::string GenerateSimTop(const Mantle &mantle,
       auto addr_lo = (uint32_t) (addr & 0xFFFFFFFF);
       auto addr_hi = (uint32_t) (addr >> 32u);
       uint32_t buffer_idx = 2 * (buffer_offset) + (ndefault + 2 * num_rbs);
-      buffer_meta << GenMMIOWrite(buffer_idx, addr_lo, rb.name + " " + rb.buffers[i].desc_);
+      buffer_meta << GenMMIOWrite(buffer_idx, addr_lo, rb.name + " " + fletcher::ToString(rb.buffers[i].desc_));
       buffer_meta << GenMMIOWrite(buffer_idx + 1, addr_hi);
       buffer_offset++;
     }
