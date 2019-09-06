@@ -29,15 +29,6 @@ enum class Mode {
   WRITE  ///< Write mode
 };
 
-struct FieldMetadata {
-  std::shared_ptr<arrow::DataType> type_{};
-  int64_t length_ = 0;
-  int64_t null_count_ = 0;
-  FieldMetadata() = default;
-  FieldMetadata(std::shared_ptr<arrow::DataType> type, int64_t length, int64_t null_count)
-      : type_(std::move(type)), length_(length), null_count_(null_count) {}
-};
-
 struct BufferMetadata {
   const uint8_t *raw_buffer_;
   int64_t size_;
@@ -56,10 +47,19 @@ struct BufferMetadata {
       : raw_buffer_(raw_buffer), size_(size), desc_(std::move(desc)), level_(level), implicit_(implicit) {}
 };
 
+struct FieldMetadata {
+  std::shared_ptr<arrow::DataType> type_{};
+  int64_t length = 0;
+  int64_t null_count = 0;
+  FieldMetadata() = default;
+  FieldMetadata(std::shared_ptr<arrow::DataType> type, int64_t length, int64_t null_count)
+      : type_(std::move(type)), length(length), null_count(null_count) {}
+  std::vector<BufferMetadata> buffers;
+};
+
 struct RecordBatchDescription {
   std::string name;
   int64_t rows;
-  std::vector<BufferMetadata> buffers;
   std::vector<FieldMetadata> fields;
   Mode mode = Mode::READ;
   // Virtual means that the RecordBatch might exist logically but is not defined physically. This is useful when

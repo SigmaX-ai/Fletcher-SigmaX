@@ -33,7 +33,9 @@ std::shared_ptr<Port> Port::Make(const std::shared_ptr<Type> &type,
 }
 
 std::shared_ptr<Object> Port::Copy() const {
-  return std::make_shared<Port>(name(), type_, dir(), domain_);
+  auto result = std::make_shared<Port>(name(), type_, dir(), domain_);
+  result->meta = meta;
+  return result;
 }
 
 Port::Port(std::string name, std::shared_ptr<Type> type, Term::Dir dir, std::shared_ptr<ClockDomain> domain)

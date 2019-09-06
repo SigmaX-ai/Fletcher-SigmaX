@@ -30,9 +30,9 @@ TEST(RecordBatchAnalyzer, VisitPrimitive) {
   rba.Analyze(*rb);
   ASSERT_FALSE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "PrimRead");
-  ASSERT_EQ(rbd.fields[0].length_, 4);
+  ASSERT_EQ(rbd.fields[0].length, 4);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::int8()));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 0);
   ASSERT_EQ(rbd.buffers[0].desc_, "number:int8 (values)");
   ASSERT_EQ(rbd.buffers[0].size_, 4);
@@ -45,9 +45,9 @@ TEST(RecordBatchAnalyzer, VisitString) {
   rba.Analyze(*rb);
   ASSERT_FALSE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "StringRead");
-  ASSERT_EQ(rbd.fields[0].length_, 26);
+  ASSERT_EQ(rbd.fields[0].length, 26);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::utf8()));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 0);
   ASSERT_EQ(rbd.buffers[0].desc_, "Name:string (offsets)");
   ASSERT_EQ(rbd.buffers[0].size_, 27 * sizeof(int32_t));
@@ -63,9 +63,9 @@ TEST(RecordBatchAnalyzer, VisitList) {
   rba.Analyze(*rb);
   ASSERT_FALSE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "ListUint8");
-  ASSERT_EQ(rbd.fields[0].length_, 3);
+  ASSERT_EQ(rbd.fields[0].length, 3);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::list(arrow::uint8())));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 0);
   ASSERT_EQ(rbd.buffers[0].desc_, "L:list<item: uint8> (offsets)");
   ASSERT_EQ(rbd.buffers[0].size_, 4 * sizeof(int32_t));
@@ -85,9 +85,9 @@ TEST(RecordBatchAnalyzer, VisitStruct) {
   };
   ASSERT_FALSE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "StructBatch");
-  ASSERT_EQ(rbd.fields[0].length_, 4);
+  ASSERT_EQ(rbd.fields[0].length, 4);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::struct_(struct_fields)));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 1);
   ASSERT_EQ(rbd.buffers[0].desc_, "S:struct<A: uint16, B: uint32>:uint16 (values)");
   ASSERT_EQ(rbd.buffers[0].size_, 4 * sizeof(uint16_t));
@@ -104,9 +104,9 @@ TEST(SchemaAnalyzer, VisitPrimitive) {
   sa.Analyze(*schema);
   ASSERT_TRUE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "PrimRead");
-  ASSERT_EQ(rbd.fields[0].length_, 0);
+  ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::int8()));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_GT(rbd.buffers.size(), 0);
   ASSERT_EQ(rbd.buffers[0].level_, 0);
   ASSERT_EQ(rbd.buffers[0].desc_, "number:int8 (values)");
@@ -120,9 +120,9 @@ TEST(SchemaAnalyzer, VisitString) {
   sa.Analyze(*schema);
   ASSERT_TRUE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "StringRead");
-  ASSERT_EQ(rbd.fields[0].length_, 0);
+  ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::utf8()));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 0);
   ASSERT_EQ(rbd.buffers[0].desc_, "Name:string (offsets)");
   ASSERT_EQ(rbd.buffers[0].size_, 0);
@@ -144,9 +144,9 @@ TEST(SchemaAnalyzer, VisitStruct) {
 
   ASSERT_TRUE(rbd.is_virtual);
   ASSERT_EQ(rbd.name, "StructBatch");
-  ASSERT_EQ(rbd.fields[0].length_, 0);
+  ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::struct_(struct_fields)));
-  ASSERT_EQ(rbd.fields[0].null_count_, 0);
+  ASSERT_EQ(rbd.fields[0].null_count, 0);
   ASSERT_EQ(rbd.buffers[0].level_, 1);
   ASSERT_EQ(rbd.buffers[0].desc_, "S:struct<A: uint16, B: uint32>:uint16 (values)");
   ASSERT_EQ(rbd.buffers[0].size_, 0);

@@ -46,10 +46,9 @@ using cerata::Stream;
 
 std::shared_ptr<Node> ctrl_width(const arrow::Field &field) {
   fletcher::FieldMetadata field_meta;
-  std::vector<fletcher::BufferMetadata> buffer_meta;
-  fletcher::FieldAnalyzer fa(&field_meta, &buffer_meta);
+  fletcher::FieldAnalyzer fa(&field_meta);
   fa.Analyze(field);
-  std::shared_ptr<Node> width = intl(buffer_meta.size());
+  std::shared_ptr<Node> width = intl(field_meta.buffers.size());
   return width * bus_addr_width();
 }
 

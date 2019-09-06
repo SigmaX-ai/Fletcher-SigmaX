@@ -35,18 +35,18 @@ bool SchemaAnalyzer::Analyze(const arrow::Schema &schema) {
     // Analyze every field using a FieldAnalyzer.
     FieldMetadata field_meta;
     std::vector<BufferMetadata> buffers_meta;
-    FieldAnalyzer fa(&field_meta, &buffers_meta, {schema.field(i)->name()});
+    FieldAnalyzer fa(&field_meta, {schema.field(i)->name()});
     fa.Analyze(*schema.field(i));
     // Push back the result.
+    field_meta.buffers.insert(out_->fields.back().buffers.end(), buffers_meta.begin(), buffers_meta.end());
     out_->fields.push_back(field_meta);
-    out_->buffers.insert(out_->buffers.end(), buffers_meta.begin(), buffers_meta.end());
   }
   return true;
 }
 
 bool FieldAnalyzer::Analyze(const arrow::Field &field) {
-  field_out_->null_count_ = 0;
-  field_out_->length_ = 0;
+  field_out_->null_count = 0;
+  field_out_->length = 0;
   field_out_->type_ = field.type();
   // Check if the field is nullable. If so, add the validity bitmap buffer as expected buffer.
   // As there is no physical RecordBatch, we don't know whether it is implicit or not, and it is assumed to not be
@@ -54,7 +54,7 @@ bool FieldAnalyzer::Analyze(const arrow::Field &field) {
   if (field.nullable()) {
     auto desc = buf_name_;
     desc.emplace_back("validity");
-    buffers_out_->emplace_back(nullptr, 0, desc, level, false);
+    field_out_->buffers.emplace_back(nullptr, 0, desc, level, false);
   }
   auto status = VisitType(*field.type());
   if (!status.ok()) {
@@ -70,7 +70,7 @@ arrow::Status FieldAnalyzer::VisitField(const arrow::Field &field) {
   if (field.nullable()) {
     auto desc = buf_name_;
     desc.emplace_back("validity");
-    buffers_out_->emplace_back(nullptr, 0, desc, level, false);
+    field_out_->buffers.emplace_back(nullptr, 0, desc, level, false);
   }
   return VisitType(*field.type());
 }
@@ -87,11 +87,11 @@ arrow::Status FieldAnalyzer::VisitBinary(const arrow::BinaryType &type) {
   // Expect an offsets buffer
   auto odesc = buf_name_;
   odesc.emplace_back("offsets");
-  buffers_out_->emplace_back(nullptr, 0, odesc, level);
+  field_out_->buffers.emplace_back(nullptr, 0, odesc, level);
   // Expect a values buffer
   auto vdesc = buf_name_;
   vdesc.emplace_back("values");
-  buffers_out_->emplace_back(nullptr, 0, vdesc, level);
+  field_out_->buffers.emplace_back(nullptr, 0, vdesc, level);
   return arrow::Status::OK();
 }
 
@@ -99,7 +99,7 @@ arrow::Status FieldAnalyzer::Visit(const arrow::ListType &type) {
   // Expect an offsets buffer
   auto desc = buf_name_;
   desc.emplace_back("offsets");
-  buffers_out_->emplace_back(nullptr, 0, desc, level);
+  field_out_->buffers.emplace_back(nullptr, 0, desc, level);
   // Advance to the next nesting level.
   level++;
   // A list should only have one child.

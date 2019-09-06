@@ -118,7 +118,7 @@ static std::shared_ptr<Component> BusArbiter(BusSpec spec) {
 std::unique_ptr<Instance> BusArbiterInstance(BusSpec spec) {
   auto optional_existing_component = cerata::default_component_pool()->Get(BusArbiterName(spec));
   if (optional_existing_component) {
-    return Instance::Make(optional_existing_component.value());
+    return Instance::Make(*optional_existing_component);
   } else {
     auto new_component = BusArbiter(spec);
     return BusArbiterInstance(spec);

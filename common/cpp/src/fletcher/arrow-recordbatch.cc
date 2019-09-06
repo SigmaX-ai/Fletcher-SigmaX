@@ -21,9 +21,11 @@ namespace fletcher {
 
 std::string RecordBatchDescription::ToString() const {
   std::stringstream str;
-  for (const auto &b : buffers) {
-    str << std::setfill(' ') << std::setw(2 * b.level_) << ':'
-        << ::fletcher::ToString(b.desc_) << ':' << b.size_ << '\n';
+  for (const auto &f : fields) {
+    for (const auto &b : f.buffers) {
+      str << std::setfill(' ') << std::setw(2 * b.level_) << ':'
+          << ::fletcher::ToString(b.desc_) << ':' << b.size_ << '\n';
+    }
   }
   return str.str();
 }
@@ -36,10 +38,10 @@ arrow::Status RecordBatchAnalyzer::VisitArray(const arrow::Array &arr) {
     auto desc = buf_name;
     desc.emplace_back("validity");
     if (arr.null_count() > 0) {
-      out_->buffers.emplace_back(arr.null_bitmap()->data(), arr.null_bitmap()->size(), desc, level);
+      out_->fields.back().buffers.emplace_back(arr.null_bitmap()->data(), arr.null_bitmap()->size(), desc, level);
     } else {
       auto dummy = std::make_shared<arrow::Buffer>(nullptr, 0);
-      out_->buffers.emplace_back(dummy->data(), dummy->size(), desc, level, true);
+      out_->fields.back().buffers.emplace_back(dummy->data(), dummy->size(), desc, level, true);
     }
   }
   return arr.Accept(this);
@@ -67,15 +69,15 @@ arrow::Status RecordBatchAnalyzer::VisitBinary(const arrow::BinaryArray &array) 
   odesc.emplace_back("offsets");
   auto vdesc = buf_name;
   vdesc.emplace_back("values");
-  out_->buffers.emplace_back(array.value_offsets()->data(), array.value_offsets()->size(), odesc, level);
-  out_->buffers.emplace_back(array.value_data()->data(), array.value_data()->size(), vdesc, level);
+  out_->fields.back().buffers.emplace_back(array.value_offsets()->data(), array.value_offsets()->size(), odesc, level);
+  out_->fields.back().buffers.emplace_back(array.value_data()->data(), array.value_data()->size(), vdesc, level);
   return arrow::Status::OK();
 }
 
 arrow::Status RecordBatchAnalyzer::Visit(const arrow::ListArray &array) {
   auto desc = buf_name;
   desc.emplace_back("offsets");
-  out_->buffers.emplace_back(array.value_offsets()->data(), array.value_offsets()->size(), desc, level);
+  out_->fields.back().buffers.emplace_back(array.value_offsets()->data(), array.value_offsets()->size(), desc, level);
   // Advance to the next nesting level.
   level++;
   // A list should only have one child.

@@ -210,7 +210,9 @@ std::shared_ptr<Node> FieldPort::data_width() {
 std::shared_ptr<cerata::Object> FieldPort::Copy() const {
   // Take shared ownership of the type.
   auto typ = type()->shared_from_this();
-  return std::make_shared<FieldPort>(name(), function_, field_, typ, dir(), domain_);
+  auto result = std::make_shared<FieldPort>(name(), function_, field_, typ, dir(), domain_);
+  result->meta = meta;
+  return result;
 }
 
 }  // namespace fletchgen

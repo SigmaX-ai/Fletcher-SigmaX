@@ -44,7 +44,7 @@ class RecordBatchAnalyzer : public arrow::ArrayVisitor {
     std::shared_ptr<arrow::Buffer> buf = array.values();
     auto desc = buf_name;
     desc.emplace_back("values");
-    out_->buffers.emplace_back(buf->data(), buf->size(), desc, level);
+    out_->fields.back().buffers.emplace_back(buf->data(), buf->size(), desc, level);
     return arrow::Status::OK();
   }
 

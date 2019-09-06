@@ -28,10 +28,8 @@ namespace fletcher {
 
 class FieldAnalyzer : public arrow::TypeVisitor {
  public:
-  FieldAnalyzer(FieldMetadata *field,
-                std::vector<BufferMetadata> *buffers,
-                std::vector<std::string> prefix = {})
-      : field_out_(field), buffers_out_(buffers), buf_name_(std::move(prefix)) {}
+  explicit FieldAnalyzer(FieldMetadata *field, std::vector<std::string> prefix = {})
+      : field_out_(field), buf_name_(std::move(prefix)) {}
   bool Analyze(const arrow::Field &field);
 
  protected:
@@ -43,7 +41,7 @@ class FieldAnalyzer : public arrow::TypeVisitor {
     (void) type;
     auto desc = buf_name_;
     desc.emplace_back("values");
-    buffers_out_->emplace_back(nullptr, 0, desc, level);
+    field_out_->buffers.emplace_back(nullptr, 0, desc, level);
     return arrow::Status::OK();
   }
 
@@ -84,7 +82,6 @@ class FieldAnalyzer : public arrow::TypeVisitor {
 
   int level = 0;
   FieldMetadata *field_out_;
-  std::vector<BufferMetadata> *buffers_out_;
   std::vector<std::string> buf_name_;
 };
 

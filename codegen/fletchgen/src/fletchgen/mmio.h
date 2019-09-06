@@ -73,5 +73,6 @@ struct MmioPort : public Port {
 };
 
 void GenerateVhdmmioYaml(const std::vector<fletcher::RecordBatchDescription>& batches);
+std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::RecordBatchDescription> &batches);
 
 }  // namespace fletchgen
