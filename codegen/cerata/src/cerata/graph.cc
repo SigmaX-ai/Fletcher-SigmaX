@@ -63,7 +63,7 @@ Graph &Graph::AddObject(const std::shared_ptr<Object> &obj) {
   for (const auto &o : objects_) {
     if (o->name() == obj->name()) {
       if (o.get() == obj.get()) {
-        CERATA_LOG(DEBUG, "Graph " + name() + " already owns object " + obj->name() + ". Skipping...");
+        // CERATA_LOG(DEBUG, "Graph " + name() + " already owns object " + obj->name() + ". Skipping...");
         return *this;
       } else {
         CERATA_LOG(FATAL, "Graph " + name() + " already contains an object with name " + obj->name());
@@ -73,6 +73,13 @@ Graph &Graph::AddObject(const std::shared_ptr<Object> &obj) {
   objects_.push_back(obj);
   obj->SetParent(this);
   AddObjectParams(this, *obj);
+  return *this;
+}
+
+Graph &Graph::AddObjects(const std::initializer_list<std::shared_ptr<Object>> &objs) {
+  for (const auto& obj : objs) {
+    AddObject(obj);
+  }
   return *this;
 }
 
@@ -89,7 +96,7 @@ std::shared_ptr<Component> Component::Make(std::string name,
                                            const std::deque<std::shared_ptr<Object>> &objects,
                                            ComponentPool *component_pool) {
   // Create the new component.
-  Component *ptr = new Component(std::move(name));
+  auto *ptr = new Component(std::move(name));
   auto ret = std::shared_ptr<Component>(ptr);
 
   // Add the component to the pool.

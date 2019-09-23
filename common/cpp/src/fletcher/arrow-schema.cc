@@ -30,15 +30,12 @@ bool SchemaAnalyzer::Analyze(const arrow::Schema &schema) {
   out_->name = fletcher::GetMeta(schema, "fletcher_name");
   // Set number of rows to 0
   out_->rows = 0;
-  // Depth-first search every column (arrow::Array) for buffers.
+
+  // Analyze every field using a FieldAnalyzer.
   for (int i = 0; i < schema.num_fields(); ++i) {
-    // Analyze every field using a FieldAnalyzer.
     FieldMetadata field_meta;
-    std::vector<BufferMetadata> buffers_meta;
     FieldAnalyzer fa(&field_meta, {schema.field(i)->name()});
     fa.Analyze(*schema.field(i));
-    // Push back the result.
-    field_meta.buffers.insert(out_->fields.back().buffers.end(), buffers_meta.begin(), buffers_meta.end());
     out_->fields.push_back(field_meta);
   }
   return true;

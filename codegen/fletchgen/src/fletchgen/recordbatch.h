@@ -59,6 +59,8 @@ struct FieldPort : public Port {
 
   /// The Arrow field this port was derived from.
   std::shared_ptr<arrow::Field> field_;
+  // The Fletcher schema this port was derived from.
+  std::shared_ptr<FletcherSchema> fletcher_schema_;
 
   /**
    * @brief Construct a new port derived from an Arrow field.
@@ -71,10 +73,14 @@ struct FieldPort : public Port {
   FieldPort(std::string name,
             Function function,
             std::shared_ptr<arrow::Field> field,
+            std::shared_ptr<FletcherSchema> fletcher_schema,
             std::shared_ptr<cerata::Type> type,
             Port::Dir dir,
             std::shared_ptr<ClockDomain> domain)
-      : Port(std::move(name), std::move(type), dir, std::move(domain)), function_(function), field_(std::move(field)) {}
+      : Port(std::move(name), std::move(type), dir, std::move(domain)),
+        function_(function),
+        field_(std::move(field)),
+        fletcher_schema_(std::move(fletcher_schema)) {}
 
   /**
    * @brief Construct a field-derived port for Arrow data.
@@ -85,7 +91,7 @@ struct FieldPort : public Port {
    * @param domain           The clock domain of this port.
    * @return                 A shared pointer to a new FieldPort.
    */
-  static std::shared_ptr<FieldPort> MakeArrowPort(const FletcherSchema &fletcher_schema,
+  static std::shared_ptr<FieldPort> MakeArrowPort(const std::shared_ptr<FletcherSchema> &fletcher_schema,
                                                   const std::shared_ptr<arrow::Field> &field,
                                                   Mode mode,
                                                   bool invert,
@@ -94,10 +100,12 @@ struct FieldPort : public Port {
    * @brief Construct a field-derived command port.
    * @param fletcher_schema  The Fletcher-derived schema.
    * @param field            The Arrow field to derive the port from.
+   * @param ctrl             Whether to generate this command port with or without ctrl field.
    * @return                 A shared pointer to a new FieldPort.
    */
-  static std::shared_ptr<FieldPort> MakeCommandPort(const FletcherSchema &fletcher_schema,
+  static std::shared_ptr<FieldPort> MakeCommandPort(const std::shared_ptr<FletcherSchema> &fletcher_schema,
                                                     const std::shared_ptr<arrow::Field> &field,
+                                                    bool ctrl = true,
                                                     const std::shared_ptr<ClockDomain> &domain = default_domain());
 
   /**
@@ -106,7 +114,7 @@ struct FieldPort : public Port {
    * @param field            The Arrow field to derive the port from.
    * @return                 A shared pointer to a new FieldPort.
    */
-  static std::shared_ptr<FieldPort> MakeUnlockPort(const FletcherSchema &fletcher_schema,
+  static std::shared_ptr<FieldPort> MakeUnlockPort(const std::shared_ptr<FletcherSchema> &fletcher_schema,
                                                    const std::shared_ptr<arrow::Field> &field,
                                                    const std::shared_ptr<ClockDomain> &domain = default_domain());
 
@@ -157,7 +165,7 @@ struct RecordBatch : public Component {
    * Fletcher's hardware implementation concatenates each subsignal of potentially multiple streams of an
    * ArrayReader/Writer onto a single subsignal. This function must unconcatenate these streams.
    */
-  void AddArrays(const FletcherSchema &fletcher_schema);
+  void AddArrays(const std::shared_ptr<FletcherSchema> &fletcher_schema);
 
   /// Fletcher schema implemented by this RecordBatch(Reader/Writer)
   std::shared_ptr<FletcherSchema> fletcher_schema_;

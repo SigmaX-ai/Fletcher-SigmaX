@@ -86,6 +86,17 @@ class NodeArray : public Object {
   std::deque<std::shared_ptr<Node>> nodes_;
 };
 
+class SignalArray : public NodeArray {
+ public:
+  static std::shared_ptr<NodeArray> Make(const std::string &name,
+                                         const std::shared_ptr<Type> &type,
+                                         std::shared_ptr<Node> size,
+                                         const std::shared_ptr<ClockDomain> &domain = default_domain());
+ protected:
+  SignalArray(const std::shared_ptr<Signal> &base, std::shared_ptr<Node> size) :
+      NodeArray(base->name(), Node::NodeID::SIGNAL, std::dynamic_pointer_cast<Node>(base), std::move(size)) {}
+};
+
 /**
  * @brief An array of port nodes
  */
@@ -93,10 +104,10 @@ class PortArray : public NodeArray, public Term {
  public:
   /// @brief Get a smart pointer to a new ArrayPort.
   static std::shared_ptr<PortArray> Make(const std::string &name,
-                                         const std::shared_ptr<Type>& type,
+                                         const std::shared_ptr<Type> &type,
                                          std::shared_ptr<Node> size,
                                          Port::Dir dir = Port::Dir::IN,
-                                         const std::shared_ptr<ClockDomain>& domain = default_domain());
+                                         const std::shared_ptr<ClockDomain> &domain = default_domain());
 
   /// @brief Get a smart pointer to a new ArrayPort with a base type other than the default Port.
   static std::shared_ptr<PortArray> Make(const std::shared_ptr<Port> &base_node,
@@ -107,9 +118,7 @@ class PortArray : public NodeArray, public Term {
 
  protected:
   /// @brief Construct a new port array.
-  PortArray(const std::shared_ptr<Port> &base,
-            std::shared_ptr<Node> size,
-            Term::Dir dir);
+  PortArray(const std::shared_ptr<Port> &base, std::shared_ptr<Node> size, Term::Dir dir);
 };
 
 }  // namespace cerata

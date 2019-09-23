@@ -212,8 +212,8 @@ static std::shared_ptr<Port> MmioBufferPort(const std::string &name,
   return result;
 }
 
-
-std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::RecordBatchDescription> &batches) {
+std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::RecordBatchDescription> &batches,
+                                                 std::vector<std::string> *buffer_port_names_out) {
   auto reg32 = Vector::Make(32);
   auto reg64 = Vector::Make(64);
 
@@ -238,7 +238,9 @@ std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::Rec
   for (const auto &r : batches) {
     for (const auto &f : r.fields) {
       for (const auto &b : f.buffers) {
-        comp->AddObject(MmioBufferPort(r.name + "_" + fletcher::ToString(b.desc_), reg64, Port::Dir::OUT));
+        auto buffer_port_name = r.name + "_" + fletcher::ToString(b.desc_);
+        comp->AddObject(MmioBufferPort(buffer_port_name, reg64, Port::Dir::OUT));
+        buffer_port_names_out->push_back(buffer_port_name);
       }
     }
   }
@@ -246,10 +248,6 @@ std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::Rec
   auto bus = Port::Make("mmio", mmio(), Port::Dir::IN, kernel_cd());
 
   comp->AddObject(bus);
-
-  // comp->SetMeta(cerata::vhdl::metakeys::PRIMITIVE, "true");
-  // comp->SetMeta(cerata::vhdl::metakeys::LIBRARY, "work");
-  // comp->SetMeta(cerata::vhdl::metakeys::PACKAGE, "mmio_pkg");
 
   return comp;
 }

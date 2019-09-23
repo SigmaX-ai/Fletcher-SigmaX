@@ -51,8 +51,10 @@ class Graph : public Named {
   bool IsComponent() const { return id_ == COMPONENT; }
   /// @brief Return true if this graph is an instance, false otherwise.
   bool IsInstance() const { return id_ == INSTANCE; }
-  /// @brief Add an object to the component
+  /// @brief Add an object to the component.
   virtual Graph &AddObject(const std::shared_ptr<Object> &obj);
+  /// @brief Add a list of objects to the component.
+  virtual Graph &AddObjects(const std::initializer_list<std::shared_ptr<Object>> &objs);
   /// @brief Remove an object from the component
   virtual Graph &RemoveObject(Object *obj);
 

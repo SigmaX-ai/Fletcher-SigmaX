@@ -94,12 +94,16 @@ fletchgen::Design fletchgen::Design::GenerateFrom(const std::shared_ptr<Options>
     ret.recordbatches.push_back(recordbatch_component);
   }
 
+  // Generate a Yaml file for vhd mmio based on the recordbatch description
   GenerateVhdmmioYaml(ret.batch_desc);
 
   // ret.mmio = GenerateVhdmmioComponent(ret.batch_desc);
   // ret.mantle->AddInstanceOf(ret.mmio.get());
 
-  EnableStreamProfiling(ret.mantle.get());
+  // TODO(johanpel): fix this:
+  system("vhdmmio -V vhdl -H -P vhdl");
+
+  // EnableStreamProfiling(ret.mantle.get());
 
   return ret;
 }

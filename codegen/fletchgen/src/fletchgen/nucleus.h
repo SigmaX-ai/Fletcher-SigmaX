@@ -25,18 +25,25 @@
 #include "fletchgen/schema.h"
 #include "fletchgen/recordbatch.h"
 #include "fletchgen/kernel.h"
+#include "fletchgen/array.h"
 
 namespace fletchgen {
 
 using cerata::Port;
 using cerata::Component;
 
-/**
- * @brief It's like a kernel, but there is a kernel inside.
- */
+/// @brief Merges the address of a command stream with the rest of the command stream.
+struct ArrayCmdCtrlMerger : Component {
+  ArrayCmdCtrlMerger();
+};
+
+/// @brief Create an instance of an ArrayCmdCtrlMerger.
+std::unique_ptr<Instance> ArrayCmdCtrlMergerInstance(const std::string& name);
+
+/// @brief It's like a kernel, but there is a kernel inside.
 struct Nucleus : Component {
   /// @brief Construct a new Nucleus.
-  explicit Nucleus(const std::string& name,
+  explicit Nucleus(const std::string &name,
                    const std::deque<RecordBatch *> &recordbatches,
                    const std::vector<fletcher::RecordBatchDescription> &batch_desc);
 

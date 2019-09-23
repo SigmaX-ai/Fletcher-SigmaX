@@ -69,10 +69,11 @@ struct MmioPort : public Port {
    */
   static std::shared_ptr<MmioPort> Make(Port::Dir dir,
                                         MmioSpec spec = MmioSpec(),
-                                        const std::shared_ptr<ClockDomain>& domain = cerata::default_domain());
+                                        const std::shared_ptr<ClockDomain> &domain = cerata::default_domain());
 };
 
-void GenerateVhdmmioYaml(const std::vector<fletcher::RecordBatchDescription>& batches);
-std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::RecordBatchDescription> &batches);
+void GenerateVhdmmioYaml(const std::vector<fletcher::RecordBatchDescription> &batches);
+std::shared_ptr<Component> GenerateMmioComponent(const std::vector<fletcher::RecordBatchDescription> &batches,
+                                                 std::vector<std::string> *buffer_port_names_out);
 
 }  // namespace fletchgen

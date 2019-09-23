@@ -34,6 +34,7 @@ MultiBlock Design::Generate() {
 
   // Resolve VHDL specific problems
   CERATA_LOG(DEBUG, "VHDL: Transforming Cerata graph to VHDL-compatible.");
+  // TODO(johanpel): resolve for port arrays
   Resolve::ResolvePortToPort(component_.get());
   Resolve::ExpandStreams(component_.get());
 

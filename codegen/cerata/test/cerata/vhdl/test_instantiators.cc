@@ -13,9 +13,7 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
-
 #include <cerata/api.h>
-
 #include "cerata/test_designs.h"
 
 namespace cerata {
@@ -77,6 +75,20 @@ TEST(VHDL_INST, ArrayTypeMapper) {
 TEST(VHDL_INST, ArrayArray) {
   default_component_pool()->Clear();
   auto top = GetArrayToArrayComponent();
+  auto code = vhdl::Design(top);
+  std::cout << code.Generate().ToString();
+}
+
+TEST(VHDL_INST, ArrayArrayInverted) {
+  default_component_pool()->Clear();
+  auto top = GetArrayToArrayComponent(true);
+  auto code = vhdl::Design(top);
+  std::cout << code.Generate().ToString();
+}
+
+TEST(VHDL_INST, ArrayArrayInternal) {
+  default_component_pool()->Clear();
+  auto top = GetArrayToArrayInternalComponent();
   auto code = vhdl::Design(top);
   std::cout << code.Generate().ToString();
 }

@@ -48,9 +48,30 @@ Component *Resolve::ResolvePortToPort(Component *comp) {
   std::deque<Node *> resolved;
   CERATA_LOG(DEBUG, "VHDL: Resolving port-to-port connections...");
   for (const auto &inst : comp->children()) {
-    for (const auto &port : inst->GetAll<Port>()) {
-      // Iterate over all edges that are sinks of this port.
-      for (const auto &edge : port->sinks()) {
+    // First get all normal ports.
+    auto ports = inst->GetAll<Port>();
+    // Append port nodes from port arrays
+    auto port_arrays = inst->GetAll<PortArray>();
+    for (const auto &pa : port_arrays) {
+      for (const auto &n : pa->nodes()) {
+        auto p = dynamic_cast<Port *>(n);
+        if (p != nullptr) {
+          ports.push_back(p);
+        }
+      }
+    }
+
+    for (const auto &port : ports) {
+      // Iterate over all edges that are sinks or sources of this port.
+
+      // Obtain all edges:
+      auto sinks = port->sinks();
+      auto sources = port->sources();
+      std::deque<Edge *> edges;
+      edges.insert(edges.end(), sources.begin(), sources.end());
+      edges.insert(edges.end(), sinks.begin(), sinks.end());
+
+      for (const auto &edge : edges) {
         // If either side is not a port, continue with the next edge.
         if (!edge->src()->IsPort() || !edge->dst()->IsPort()) { continue; }
         // If either sides of the edges are a port node on this component, continue, since this is allowed in VHDL.

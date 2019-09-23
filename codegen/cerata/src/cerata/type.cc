@@ -344,12 +344,17 @@ std::shared_ptr<RecField> NoSep(std::shared_ptr<RecField> field) {
   return field;
 }
 
-std::shared_ptr<Record> Record::Make(const std::string &name, std::deque<std::shared_ptr<RecField>> fields) {
+std::shared_ptr<Record> Record::Make(const std::string &name, const std::deque<std::shared_ptr<RecField>>& fields) {
   return std::make_shared<Record>(name, fields);
 }
 
-Record &Record::AddField(const std::shared_ptr<RecField> &field) {
-  fields_.push_back(field);
+Record &Record::AddField(const std::shared_ptr<RecField> &field, std::optional<size_t> index) {
+  if (index) {
+    auto it = fields_.begin() + *index;
+    fields_.insert(it, field);
+  } else {
+    fields_.push_back(field);
+  }
   return *this;
 }
 

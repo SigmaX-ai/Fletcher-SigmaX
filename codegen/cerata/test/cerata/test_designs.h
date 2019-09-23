@@ -26,9 +26,9 @@ std::shared_ptr<Component> GetTypeExpansionComponent() {
   auto width = Parameter::Make("width", integer(), intl(8));
   auto vec_type = Vector::Make("data", width);
   auto rec_type = Record::Make("rec_type", {
-    RecField::Make("cerata", vec_type),
-    RecField::Make("is", vec_type),
-    RecField::Make("awesome", vec_type)
+      RecField::Make("cerata", vec_type),
+      RecField::Make("is", vec_type),
+      RecField::Make("awesome", vec_type)
   });
   auto stream_type = Stream::Make("stream_type", rec_type);
   auto data_in = Port::Make("data", stream_type, Port::Dir::IN);
@@ -42,27 +42,61 @@ std::shared_ptr<Component> GetTypeExpansionComponent() {
   return top;
 }
 
-std::shared_ptr<Component> GetArrayToArrayComponent() {
+std::shared_ptr<Component> GetArrayToArrayInternalComponent() {
+  auto data = Vector::Make<8>();
+
+  auto top_comp = Component::Make("top_comp");
+
+  auto src_size = Parameter::Make("size", integer(), intl(0));
+  auto src_array = PortArray::Make("array", data, src_size, Term::OUT);
+  auto src_comp = Component::Make("src", {src_size, src_array});
+  auto src = Instance::Make(src_comp.get());
+
+  auto dst_size = Parameter::Make("size", integer(), intl(0));
+  auto dst_array = PortArray::Make("array", data, dst_size, Term::IN);
+  auto dst_comp = Component::Make("dst", {dst_size, dst_array});
+  auto dst = Instance::Make(dst_comp.get());
+
+  src->porta("array")->Append();
+  src->porta("array")->Append();
+
+  dst->porta("array")->Append();
+  dst->porta("array")->Append();
+
+  Connect(dst->porta("array")->node(0), src->porta("array")->node(1));
+  Connect(dst->porta("array")->node(1), src->porta("array")->node(0));
+
+  top_comp->AddChild(std::move(src));
+  top_comp->AddChild(std::move(dst));
+  return top_comp;
+}
+
+std::shared_ptr<Component> GetArrayToArrayComponent(bool invert = false) {
   auto data = Vector::Make<8>();
 
   auto top_size = Parameter::Make("top_size", integer(), intl(0));
-  auto top_array = PortArray::Make("top_array", data, top_size, Term::IN);
+  auto top_array = PortArray::Make("top_array", data, top_size, invert ? Term::OUT : Term::IN);
   auto top_comp = Component::Make("top_comp", {top_size, top_array});
 
   auto child_size = Parameter::Make("child_size", integer(), intl(0));
-  auto child_array = PortArray::Make("child_array", data, child_size, Term::IN);
+  auto child_array = PortArray::Make("child_array", data, child_size, invert ? Term::OUT : Term::IN);
   auto child_comp = Component::Make("child_comp", {child_size, child_array});
   auto child_inst = Instance::Make(child_comp.get());
 
-  child_inst->porta("child_array")->Append();
-  child_inst->porta("child_array")->Append();
-  top_array->Append();
-
-  Connect(child_inst->porta("child_array")->node(0), top_array->node(0));
-  Connect(child_inst->porta("child_array")->node(1), top_array->node(0));
-
+  if (invert) {
+    child_inst->porta("child_array")->Append();
+    top_array->Append();
+    top_array->Append();
+    Connect(top_array->node(0), child_inst->porta("child_array")->node(0));
+    Connect(top_array->node(1), child_inst->porta("child_array")->node(0));
+  } else {
+    child_inst->porta("child_array")->Append();
+    child_inst->porta("child_array")->Append();
+    top_array->Append();
+    Connect(child_inst->porta("child_array")->node(0), top_array->node(0));
+    Connect(child_inst->porta("child_array")->node(1), top_array->node(0));
+  }
   top_comp->AddChild(std::move(child_inst));
-
   return top_comp;
 }
 

@@ -117,7 +117,7 @@ class Type : public Named, public std::enable_shared_from_this<Type> {
   /// @brief Check if a mapper can be generated to another specific type.
   virtual bool CanGenerateMapper(const Type &other) const { return false; }
   /// @brief Generate a new mapper to a specific other type. Should be checked with CanGenerateMapper first, or throws.
-  virtual std::shared_ptr<TypeMapper> GenerateMapper(Type* other) { return nullptr; }
+  virtual std::shared_ptr<TypeMapper> GenerateMapper(Type *other) { return nullptr; }
 
   /// @brief Obtain any Nodes that parametrize this type.
   virtual std::deque<Node *> GetParameters() const { return {}; }
@@ -290,9 +290,9 @@ class Record : public Type {
   /// @brief Record constructor.
   explicit Record(std::string name, std::deque<std::shared_ptr<RecField>> fields = {});
   /// @brief Create a new Record Type, and return a shared pointer to it.
-  static std::shared_ptr<Record> Make(const std::string &name, std::deque<std::shared_ptr<RecField>> fields = {});
+  static std::shared_ptr<Record> Make(const std::string &name, const std::deque<std::shared_ptr<RecField>>& fields = {});
   /// @brief Add a RecordField to this Record.
-  Record &AddField(const std::shared_ptr<RecField> &field);;
+  Record &AddField(const std::shared_ptr<RecField> &field, std::optional<size_t> index = std::nullopt);
   /// @brief Return the RecordField at index i contained by this record.
   std::shared_ptr<RecField> field(size_t i) const { return fields_[i]; }
   /// @brief Return all fields contained by this record.
@@ -347,7 +347,7 @@ class Stream : public Type {
   /// @brief Check if a mapper can be generated to another specific type.
   bool CanGenerateMapper(const Type &other) const override;
   /// @brief Generate a new mapper to a specific other type. Should be checked with CanGenerateMapper first, or throws.
-  std::shared_ptr<TypeMapper> GenerateMapper(Type* other) override;
+  std::shared_ptr<TypeMapper> GenerateMapper(Type *other) override;
 
  private:
   /// @brief The type of the elements traveling over this stream.
