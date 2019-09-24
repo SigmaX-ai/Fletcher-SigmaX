@@ -54,8 +54,8 @@ class NodeArray : public Object {
   /// @brief Deep-copy the NodeArray.
   std::shared_ptr<Object> Copy() const override;
 
-  /// @brief Append a node to this array. Returns a pointer to that node.
-  Node *Append();
+  /// @brief Append a node to this array, optionally incrementing the size node. Returns a pointer to that node.
+  Node *Append(bool increment_size = true);
   /// @brief Return all nodes of this NodeArray.
   std::deque<Node *> nodes() const { return ToRawPointers(nodes_); }
   /// @brief Return element node i.

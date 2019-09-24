@@ -120,7 +120,7 @@ Mantle::Mantle(std::string name,
     arbiter->par(bus_data_width()->name()) <<= intl(spec.data_width);
     arbiter->par(bus_len_width()->name()) <<= intl(spec.len_width);
     if (spec.function == BusFunction::WRITE) {
-      arbiter->par(bus_strobe_width()->name()) <<= intl(spec.data_width / 8);
+      arbiter->par(bus_strobe_width()->name()) <<= intl(static_cast<int>(spec.data_width / 8));
     }
     arbiters_[spec] = arbiter;
     // Create the bus port on the mantle level.

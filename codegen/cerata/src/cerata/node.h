@@ -83,6 +83,8 @@ class Node : public Object, public std::enable_shared_from_this<Node> {
   virtual bool AddEdge(const std::shared_ptr<Edge> &edge) = 0;
   /// @brief Remove an edge of this node.
   virtual bool RemoveEdge(Edge *edge) = 0;
+  /// @brief Return all edges this Node is on.
+  virtual std::deque<Edge *> edges() const;
   /// @brief Get the input edges of this Node.
   virtual std::deque<Edge *> sources() const { return {}; }
   /// @brief Get the output edges of this Node.

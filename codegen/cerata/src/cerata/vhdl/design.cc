@@ -39,8 +39,12 @@ MultiBlock Design::Generate() {
   Resolve::ExpandStreams(component_.get());
 
   // Place header
+  Block h;
+  if (!notice_.empty()) {
+    h << notice_;
+  }
+
   if (!libs_.empty()) {
-    Block h;
     h << Line(libs_);
     ret << h;
   }

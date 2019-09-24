@@ -45,22 +45,22 @@ enum class BusFunction {
 /// @brief Bus specification
 struct BusSpec {
   /// Width of data bus.
-  size_t data_width = 512;
+  uint32_t data_width = 512;
   /// Width of address bus.
-  size_t addr_width = 64;
+  uint32_t addr_width = 64;
   /// Width of burst length field.
-  size_t len_width = 8;
+  uint32_t len_width = 8;
   /// Minimum burst size.
-  size_t burst_step = 1;
+  uint32_t burst_step = 1;
   /// Maximum burst size.
-  size_t max_burst = 128;
+  uint32_t max_burst = 128;
   /// Bus function.
   BusFunction function = BusFunction::READ;
 
   /// @brief Return a human-readable version of the bus specification.
-  std::string ToString() const;
+  [[nodiscard]] std::string ToString() const;
   /// @brief Return a type name for a Cerata type based on this bus specification.
-  std::string ToBusTypeName() const;
+  [[nodiscard]] std::string ToBusTypeName() const;
 };
 
 /// @brief Returns true if bus specifications are equal, false otherwise.

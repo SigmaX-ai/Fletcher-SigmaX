@@ -79,14 +79,16 @@ void NodeArray::IncrementSize() {
   }
 }
 
-Node *NodeArray::Append() {
+Node *NodeArray::Append(bool increment_size) {
   auto elem = std::dynamic_pointer_cast<Node>(base_->Copy());
   if (parent()) {
     elem->SetParent(*parent());
   }
   elem->SetArray(this);
   nodes_.push_back(elem);
-  IncrementSize();
+  if (increment_size) {
+    IncrementSize();
+  }
   return elem.get();
 }
 

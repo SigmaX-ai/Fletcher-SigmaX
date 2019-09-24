@@ -75,6 +75,7 @@ add_compile_unit(
     test/cerata/vhdl/test_instantiators.cc
   DEPS
     cerata::core
+    cerata::dot
 )
 
 set(CERATA_BACKENDS)

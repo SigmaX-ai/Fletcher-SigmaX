@@ -35,6 +35,15 @@ std::string Node::ToString() const {
   return name();
 }
 
+std::deque<Edge *> Node::edges() const {
+  auto snk = sinks();
+  auto src = sources();
+  std::deque<Edge *> edges;
+  edges.insert(edges.end(), snk.begin(), snk.end());
+  edges.insert(edges.end(), src.begin(), src.end());
+  return edges;
+}
+
 // Generate node casting convenience functions.
 #ifndef NODE_CAST_IMPL_FACTORY
 #define NODE_CAST_IMPL_FACTORY(NODENAME)                                                     \

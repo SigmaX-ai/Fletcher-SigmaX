@@ -91,6 +91,9 @@ TEST(VHDL_INST, ArrayArrayInternal) {
   auto top = GetArrayToArrayInternalComponent();
   auto code = vhdl::Design(top);
   std::cout << code.Generate().ToString();
+  dot::Grapher dot;
+  dot.style.config = dot::Config::all();
+  dot.GenFile(*top, "Dot_ArrayToArray.dot");
 }
 
 TEST(VHDL_INST, AllPortTypes) {

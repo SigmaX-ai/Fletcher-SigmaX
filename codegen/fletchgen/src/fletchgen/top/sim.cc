@@ -109,11 +109,11 @@ std::string GenerateSimTop(const Mantle &mantle,
         buffer_meta << GenMMIOWrite(buffer_idx + 1, addr_hi);
         buffer_offset++;
       }
-      uint32_t rb_idx = 2 * (rb_offset) + ndefault;
-      rb_meta << GenMMIOWrite(rb_idx, 0, rb.name + " first index");
-      rb_meta << GenMMIOWrite(rb_idx + 1, rb.rows, rb.name + " last index");
-      rb_offset++;
     }
+    uint32_t rb_idx = 2 * (rb_offset) + ndefault;
+    rb_meta << GenMMIOWrite(rb_idx, 0, rb.name + " first index");
+    rb_meta << GenMMIOWrite(rb_idx + 1, rb.rows, rb.name + " last index");
+    rb_offset++;
   }
   t.Replace("SREC_BUFFER_ADDRESSES", buffer_meta.str());
   t.Replace("SREC_FIRSTLAST_INDICES", rb_meta.str());
