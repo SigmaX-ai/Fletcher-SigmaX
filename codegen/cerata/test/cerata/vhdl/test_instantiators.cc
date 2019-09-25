@@ -96,6 +96,16 @@ TEST(VHDL_INST, ArrayArrayInternal) {
   dot.GenFile(*top, "Dot_ArrayToArray.dot");
 }
 
+TEST(VHDL_INST, ArrayArrayInternalInverted) {
+  default_component_pool()->Clear();
+  auto top = GetArrayToArrayInternalComponent(true);
+  auto code = vhdl::Design(top);
+  std::cout << code.Generate().ToString();
+  dot::Grapher dot;
+  dot.style.config = dot::Config::all();
+  dot.GenFile(*top, "Dot_ArrayToArray.dot");
+}
+
 TEST(VHDL_INST, AllPortTypes) {
   default_component_pool()->Clear();
   auto top = GetAllPortTypesComponent();

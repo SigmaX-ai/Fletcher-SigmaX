@@ -93,10 +93,10 @@ std::shared_ptr<Edge> Connect(Node *dst, Node *src) {
       auto parent = *dst->parent();
       if (parent->IsInstance() && port->IsOutput()) {
         // If the parent is an instance, and the terminator node is an output, then we may not drive it.
-        throw std::logic_error("Cannot drive instance port " + dst->ToString() + " of mode output.");
+        CERATA_LOG(FATAL, "Cannot drive instance port " + dst->ToString() + " of mode output.");
       } else if (parent->IsComponent() && port->IsInput()) {
         // If the parent is a component, and the terminator node is an input, then we may not drive it.
-        throw std::logic_error("Cannot drive component port " + dst->ToString() + " of mode input.");
+        CERATA_LOG(FATAL, "Cannot drive component port " + dst->ToString() + " of mode input.");
       }
     }
   }
@@ -109,12 +109,12 @@ std::shared_ptr<Edge> Connect(Node *dst, Node *src) {
       auto parent = *src->parent();
       if (parent->IsInstance() && port->IsInput()) {
         // If the parent is an instance, and the terminator node is an input, then we may not source from it.
-        throw std::logic_error(
-            "Cannot source from instance port " + src->ToString() + " of mode input on " + parent->ToString());
+        CERATA_LOG(FATAL, "Cannot source from instance port " + src->ToString() + " of mode input "
+                                                                                  "on " + parent->ToString());
       } else if (parent->IsComponent() && port->IsOutput()) {
         // If the parent is a component, and the terminator node is an output, then we may not source from it.
-        throw std::logic_error(
-            "Cannot source from component port " + src->ToString() + " of mode output on " + parent->ToString());
+        CERATA_LOG(FATAL, "Cannot source from component port " + src->ToString() + " of mode output "
+                                                                                   "on " + parent->ToString());
       }
     }
   }
@@ -191,7 +191,7 @@ std::shared_ptr<Signal> insert(Edge *edge, const std::string &name_prefix, std::
 
   // Make sure we're inserting between signal/port nodes.
   if (!(src->IsPort() || src->IsSignal()) && (dst->IsPort() || dst->IsSignal())) {
-    throw std::runtime_error("Attempting to insert signal node on edge between non-port/signal node.");
+    CERATA_LOG(FATAL, "Attempting to insert signal node on edge between non-port/signal node.");
   }
 
   // When they were connected, their clock domains must have matched. Just grab the domain from the source.

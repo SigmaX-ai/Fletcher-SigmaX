@@ -68,6 +68,7 @@ inline Logger &logger() {
   return l;
 }
 
+// TODO(johanpel): do we want to throw or exit some other way?
 #define CERATA_LOG(level, msg) \
 if (CERATA_LOG_##level == CERATA_LOG_FATAL) { \
   throw std::runtime_error(std::string(__FILE__) + ":" \

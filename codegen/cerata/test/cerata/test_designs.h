@@ -19,6 +19,7 @@
 #include <vector>
 #include <memory>
 #include <utility>
+#include <string>
 
 namespace cerata {
 
@@ -42,32 +43,55 @@ std::shared_ptr<Component> GetTypeExpansionComponent() {
   return top;
 }
 
-std::shared_ptr<Component> GetArrayToArrayInternalComponent() {
+std::shared_ptr<Component> GetArrayToArrayInternalComponent(bool invert = false) {
   auto data = Vector::Make<8>();
+
+  std::string a = invert ? "src" : "dst";
+  std::string x = invert ? "dst0" : "src0";
+  std::string y = invert ? "dst1" : "src1";
 
   auto top_comp = Component::Make("top_comp");
 
-  auto src_size = Parameter::Make("size", integer(), intl(0));
-  auto src_array = PortArray::Make("array", data, src_size, Term::OUT);
-  auto src_comp = Component::Make("src", {src_size, src_array});
-  auto src = Instance::Make(src_comp.get());
+  auto a_size = Parameter::Make("size", integer(), intl(0));
+  auto a_array = PortArray::Make("array", data, a_size, invert ? Term::IN : Term::OUT);
+  auto a_comp = Component::Make(a, {a_size, a_array});
+  auto a_inst = Instance::Make(a_comp.get());
 
-  auto dst_size = Parameter::Make("size", integer(), intl(0));
-  auto dst_array = PortArray::Make("array", data, dst_size, Term::IN);
-  auto dst_comp = Component::Make("dst", {dst_size, dst_array});
-  auto dst = Instance::Make(dst_comp.get());
+  auto x_size = Parameter::Make("size", integer(), intl(0));
+  auto x_array = PortArray::Make("array", data, x_size, invert ? Term::OUT : Term::IN);
+  auto x_comp = Component::Make(x, {x_size, x_array});
+  auto x_inst = Instance::Make(x_comp.get());
 
-  src->porta("array")->Append();
-  src->porta("array")->Append();
+  auto y_size = Parameter::Make("size", integer(), intl(0));
+  auto y_array = PortArray::Make("array", data, y_size, invert ? Term::OUT : Term::IN);
+  auto y_comp = Component::Make(y, {y_size, y_array});
+  auto y_inst = Instance::Make(y_comp.get());
 
-  dst->porta("array")->Append();
-  dst->porta("array")->Append();
+  a_inst->porta("array")->Append();
+  a_inst->porta("array")->Append();
+  a_inst->porta("array")->Append();
+  a_inst->porta("array")->Append();
 
-  Connect(dst->porta("array")->node(0), src->porta("array")->node(1));
-  Connect(dst->porta("array")->node(1), src->porta("array")->node(0));
+  x_inst->porta("array")->Append();
+  x_inst->porta("array")->Append();
+  y_inst->porta("array")->Append();
+  y_inst->porta("array")->Append();
 
-  top_comp->AddChild(std::move(src));
-  top_comp->AddChild(std::move(dst));
+  if (!invert) {
+    Connect(x_inst->porta("array")->node(0), a_inst->porta("array")->node(1));
+    Connect(x_inst->porta("array")->node(1), a_inst->porta("array")->node(0));
+    Connect(y_inst->porta("array")->node(0), a_inst->porta("array")->node(3));
+    Connect(y_inst->porta("array")->node(1), a_inst->porta("array")->node(2));
+  } else {
+    Connect(a_inst->porta("array")->node(1), x_inst->porta("array")->node(0));
+    Connect(a_inst->porta("array")->node(0), x_inst->porta("array")->node(1));
+    Connect(a_inst->porta("array")->node(3), y_inst->porta("array")->node(0));
+    Connect(a_inst->porta("array")->node(2), y_inst->porta("array")->node(1));
+  }
+
+  top_comp->AddChild(std::move(a_inst));
+  top_comp->AddChild(std::move(x_inst));
+  top_comp->AddChild(std::move(y_inst));
   return top_comp;
 }
 

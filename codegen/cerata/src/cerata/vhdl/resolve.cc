@@ -74,6 +74,9 @@ static void InsertSignalArray(Component *comp, Edge *edge, std::deque<Object *> 
   if (pa == nullptr) {
     throw std::runtime_error("Edge source is child of NodeArray, but not PortArray.");
   }
+  if (!pa->parent()) {
+    throw std::runtime_error("PortArray has no parent.");
+  }
 
   CERATA_LOG(DEBUG, "VHDL:   Resolving port array " + pa->name() + " --> " + edge->dst()->ToString());
 
@@ -84,16 +87,18 @@ static void InsertSignalArray(Component *comp, Edge *edge, std::deque<Object *> 
     prefix = edge->dst()->parent().value()->name() + "_";
   }
 
-  auto name = prefix + port->name();
+  auto sig_name = prefix + port->name();
+  auto size_name = sig_name + "_" + pa->size()->name();
+
+  // Make a copy of the size node.
+  auto size_node = std::dynamic_pointer_cast<Node>(pa->size()->Copy());
+  size_node->SetName(size_name);
 
   // Create a new SignalArray.
   // This array is going to live on the component graph, so we also need a copy of the size node, since the current
   // size node lives on the instance graph only. We can only use an instance parameter from top to bottom, not vice
   // versa in VHDL.
-  auto sa = SignalArray::Make(prefix + port->name(),
-                              port->type()->shared_from_this(),
-                              std::dynamic_pointer_cast<Node>(pa->size()->Copy()),
-                              port->domain());
+  auto sa = SignalArray::Make(sig_name, port->type()->shared_from_this(), size_node, port->domain());
 
   // Add the SignalArray to the component.
   comp->AddObject(sa);
