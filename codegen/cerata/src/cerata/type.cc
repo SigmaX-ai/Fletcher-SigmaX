@@ -65,7 +65,7 @@ std::string Type::ToString(bool show_meta, bool show_mappers) const {
       break;
     case STREAM : ret = name() + ":Stm";
       break;
-    default :throw std::runtime_error("Cannot return unknown Type ID as string.");
+    default :throw std::runtime_error("Corrupted Type ID.");
   }
 
   if (show_meta || show_mappers) {
@@ -103,8 +103,8 @@ void Type::AddMapper(const std::shared_ptr<TypeMapper> &mapper, bool remove_exis
   // Check if a mapper doesn't already exists
   if (GetMapper(other, false)) {
     if (!remove_existing) {
-      throw std::runtime_error(
-          "Mapper already exists to convert from " + this->ToString(true, true) + " to " + other->ToString(true, true));
+      CERATA_LOG(FATAL, "Mapper already exists to convert "
+                        "from " + this->ToString(true, true) + " to " + other->ToString(true, true));
     } else {
       RemoveMappersTo(other);
     }
@@ -184,7 +184,7 @@ Vector::Vector(std::string name, std::shared_ptr<Type> element_type, const std::
   // Check if width is parameter or literal node
   if (width) {
     if (!(width.value()->IsParameter() || width.value()->IsLiteral() || width.value()->IsExpression())) {
-      throw std::runtime_error("Vector width can only be Parameter, Literal or Expression node.");
+      CERATA_LOG(FATAL, "Vector width can only be Parameter, Literal or Expression node.");
     }
   }
   width_ = width;
@@ -344,7 +344,7 @@ std::shared_ptr<RecField> NoSep(std::shared_ptr<RecField> field) {
   return field;
 }
 
-std::shared_ptr<Record> Record::Make(const std::string &name, const std::deque<std::shared_ptr<RecField>>& fields) {
+std::shared_ptr<Record> Record::Make(const std::string &name, const std::deque<std::shared_ptr<RecField>> &fields) {
   return std::make_shared<Record>(name, fields);
 }
 
@@ -401,7 +401,7 @@ bool Stream::CanGenerateMapper(const Type &other) const {
 std::shared_ptr<TypeMapper> Stream::GenerateMapper(Type *other) {
   // Check if we can even do this:
   if (!CanGenerateMapper(*other)) {
-    throw std::runtime_error("No mapper generator known from Stream to " + other->name() + ToString(other->id()));
+    CERATA_LOG(FATAL, "No mapper generator known from Stream to " + other->name() + ToString(other->id()));
   }
   if (IsEqual(*other)) {
     return TypeMapper::MakeImplicit(this, other);

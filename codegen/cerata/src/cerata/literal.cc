@@ -55,7 +55,8 @@ std::shared_ptr<Object> Literal::Copy() const {
 }
 
 std::shared_ptr<Edge> Literal::AddSource(Node *source) {
-  throw std::runtime_error("Cannot drive a literal node.");
+  CERATA_LOG(FATAL, "Cannot drive a literal node.");
+  return nullptr;
 }
 
 }  // namespace cerata

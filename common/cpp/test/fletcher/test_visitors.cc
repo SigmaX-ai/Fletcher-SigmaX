@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <vector>
-#include <string>
-#include <iostream>
 #include <gtest/gtest.h>
 #include <fletcher/common.h>
 #include <arrow/api.h>
+#include <vector>
+#include <string>
+#include <iostream>
 
-#include "test_schemas.h"
-#include "test_recordbatches.h"
+#include "fletcher/test_schemas.h"
+#include "fletcher/test_recordbatches.h"
+
+using vs = std::vector<std::string>;
 
 // ArrayVisistor tests
 TEST(RecordBatchAnalyzer, VisitPrimitive) {
@@ -33,9 +35,9 @@ TEST(RecordBatchAnalyzer, VisitPrimitive) {
   ASSERT_EQ(rbd.fields[0].length, 4);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::int8()));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 0);
-  ASSERT_EQ(rbd.buffers[0].desc_, "number:int8 (values)");
-  ASSERT_EQ(rbd.buffers[0].size_, 4);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"number", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 4);
 }
 
 TEST(RecordBatchAnalyzer, VisitString) {
@@ -48,12 +50,12 @@ TEST(RecordBatchAnalyzer, VisitString) {
   ASSERT_EQ(rbd.fields[0].length, 26);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::utf8()));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 0);
-  ASSERT_EQ(rbd.buffers[0].desc_, "Name:string (offsets)");
-  ASSERT_EQ(rbd.buffers[0].size_, 27 * sizeof(int32_t));
-  ASSERT_EQ(rbd.buffers[1].level_, 0);
-  ASSERT_EQ(rbd.buffers[1].desc_, "Name:string (values)");
-  ASSERT_EQ(rbd.buffers[1].size_, 133);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"Name", "offsets"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 27 * sizeof(int32_t));
+  ASSERT_EQ(rbd.fields[0].buffers[1].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[1].desc_, vs({"Name", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[1].size_, 133);
 }
 
 TEST(RecordBatchAnalyzer, VisitList) {
@@ -66,12 +68,12 @@ TEST(RecordBatchAnalyzer, VisitList) {
   ASSERT_EQ(rbd.fields[0].length, 3);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::list(arrow::uint8())));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 0);
-  ASSERT_EQ(rbd.buffers[0].desc_, "L:list<item: uint8> (offsets)");
-  ASSERT_EQ(rbd.buffers[0].size_, 4 * sizeof(int32_t));
-  ASSERT_EQ(rbd.buffers[1].level_, 1);
-  ASSERT_EQ(rbd.buffers[1].desc_, "L:list<item: uint8>:uint8 (values)");
-  ASSERT_EQ(rbd.buffers[1].size_, 13);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"L", "offsets"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 4 * sizeof(int32_t));
+  ASSERT_EQ(rbd.fields[0].buffers[1].level_, 1);
+  ASSERT_EQ(rbd.fields[0].buffers[1].desc_, vs({"L", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[1].size_, 13);
 }
 
 TEST(RecordBatchAnalyzer, VisitStruct) {
@@ -88,12 +90,12 @@ TEST(RecordBatchAnalyzer, VisitStruct) {
   ASSERT_EQ(rbd.fields[0].length, 4);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::struct_(struct_fields)));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 1);
-  ASSERT_EQ(rbd.buffers[0].desc_, "S:struct<A: uint16, B: uint32>:uint16 (values)");
-  ASSERT_EQ(rbd.buffers[0].size_, 4 * sizeof(uint16_t));
-  ASSERT_EQ(rbd.buffers[1].level_, 1);
-  ASSERT_EQ(rbd.buffers[1].desc_, "S:struct<A: uint16, B: uint32>:uint32 (values)");
-  ASSERT_EQ(rbd.buffers[1].size_, 4 * sizeof(uint32_t));
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 1);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"S", "A", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 4 * sizeof(uint16_t));
+  ASSERT_EQ(rbd.fields[0].buffers[1].level_, 1);
+  ASSERT_EQ(rbd.fields[0].buffers[1].desc_, vs({"S", "B", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[1].size_, 4 * sizeof(uint32_t));
 }
 
 // TypeVisitor tests
@@ -107,10 +109,10 @@ TEST(SchemaAnalyzer, VisitPrimitive) {
   ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::int8()));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_GT(rbd.buffers.size(), 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 0);
-  ASSERT_EQ(rbd.buffers[0].desc_, "number:int8 (values)");
-  ASSERT_EQ(rbd.buffers[0].size_, 0);
+  ASSERT_GT(rbd.fields[0].buffers.size(), 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"number", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 0);
 }
 
 TEST(SchemaAnalyzer, VisitString) {
@@ -123,12 +125,12 @@ TEST(SchemaAnalyzer, VisitString) {
   ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::utf8()));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 0);
-  ASSERT_EQ(rbd.buffers[0].desc_, "Name:string (offsets)");
-  ASSERT_EQ(rbd.buffers[0].size_, 0);
-  ASSERT_EQ(rbd.buffers[1].level_, 0);
-  ASSERT_EQ(rbd.buffers[1].desc_, "Name:string (values)");
-  ASSERT_EQ(rbd.buffers[1].size_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"Name", "offsets"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[1].level_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[1].desc_, vs({"Name", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[1].size_, 0);
 }
 
 TEST(SchemaAnalyzer, VisitStruct) {
@@ -147,10 +149,10 @@ TEST(SchemaAnalyzer, VisitStruct) {
   ASSERT_EQ(rbd.fields[0].length, 0);
   ASSERT_TRUE(rbd.fields[0].type_->Equals(arrow::struct_(struct_fields)));
   ASSERT_EQ(rbd.fields[0].null_count, 0);
-  ASSERT_EQ(rbd.buffers[0].level_, 1);
-  ASSERT_EQ(rbd.buffers[0].desc_, "S:struct<A: uint16, B: uint32>:uint16 (values)");
-  ASSERT_EQ(rbd.buffers[0].size_, 0);
-  ASSERT_EQ(rbd.buffers[1].level_, 1);
-  ASSERT_EQ(rbd.buffers[1].desc_, "S:struct<A: uint16, B: uint32>:uint32 (values)");
-  ASSERT_EQ(rbd.buffers[1].size_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[0].level_, 1);
+  ASSERT_EQ(rbd.fields[0].buffers[0].desc_, vs({"S", "A", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[0].size_, 0);
+  ASSERT_EQ(rbd.fields[0].buffers[1].level_, 1);
+  ASSERT_EQ(rbd.fields[0].buffers[1].desc_, vs({"S", "B", "values"}));
+  ASSERT_EQ(rbd.fields[0].buffers[1].size_, 0);
 }

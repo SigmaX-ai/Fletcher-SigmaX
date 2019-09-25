@@ -106,6 +106,7 @@ arrow::Status RecordBatchAnalyzer::Visit(const arrow::StructArray &array) {
     // Select the struct field
     field = struct_field->type()->child(i);
     buf_name = struct_name;
+    buf_name.push_back(field->name());
     // Visit the child array
     status = VisitArray(*child_array);
     if (!status.ok())

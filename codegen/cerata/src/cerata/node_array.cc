@@ -55,7 +55,7 @@ static std::shared_ptr<Node> IncrementNode(const Node &node) {
     }
     return new_param;
   } else {
-    throw std::runtime_error("Cannot increment node " + node.name() + " of type " + ToString(node.node_id()));
+    CERATA_LOG(FATAL, "Cannot increment node " + node.name() + " of type " + ToString(node.node_id()));
   }
 }
 
@@ -75,7 +75,7 @@ void NodeArray::IncrementSize() {
     auto new_size = IncrementNode(*size_);
     SetSize(new_size);
   } else {
-    throw std::runtime_error("Invalid ArrayNode. Size is nullptr.");
+    throw std::runtime_error("Corrupted NodeArray. Size is nullptr.");
   }
 }
 
@@ -96,7 +96,7 @@ Node *NodeArray::node(size_t i) const {
   if (i < nodes_.size()) {
     return nodes_[i].get();
   } else {
-    throw std::runtime_error("Index " + std::to_string(i) + " out of bounds for node " + ToString());
+    CERATA_LOG(FATAL, "Index " + std::to_string(i) + " out of bounds for node " + ToString());
   }
 }
 
@@ -123,7 +123,7 @@ size_t NodeArray::IndexOf(const Node &n) const {
       return i;
     }
   }
-  throw std::logic_error("Node " + n.ToString() + " is not element of " + this->ToString());
+  CERATA_LOG(FATAL, "Node " + n.ToString() + " is not element of " + this->ToString());
 }
 
 PortArray::PortArray(const std::shared_ptr<Port> &base,

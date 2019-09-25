@@ -149,7 +149,7 @@ std::string ToString(Node::NodeID id) {
     case Node::NodeID::LITERAL:return "Literal";
     case Node::NodeID::PARAMETER:return "Parameter";
     case Node::NodeID::EXPRESSION:return "Expression";
-    default:throw std::runtime_error("Unsupported Node type");
+    default:throw std::runtime_error("Corrupted node type.");
   }
 }
 

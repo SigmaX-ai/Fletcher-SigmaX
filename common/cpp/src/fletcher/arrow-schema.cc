@@ -117,6 +117,7 @@ arrow::Status FieldAnalyzer::Visit(const arrow::StructType &type) {
     level++;
     // Reset the buffer name
     buf_name_ = struct_name;
+    buf_name_.push_back(type.child(i)->name());
     // Visit the child array
     status = VisitType(*child_type);
     if (!status.ok())
