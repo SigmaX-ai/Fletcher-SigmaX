@@ -395,4 +395,4 @@ accordingly.**
 # More information
 
 For more in-depth information, check out
-[ArrayConfig.vhd](vhdl/arrays/ArrayConfig.vhd)
+[ArrayConfig.vhd](arrays/ArrayConfig_pkg.vhd)
